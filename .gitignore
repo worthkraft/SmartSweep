@@ -1,0 +1,56 @@
+# Xcode
+DerivedData/
+build/
+*.xcworkspace
+*.xcuserstate
+*.xcuserdata/
+*.xcodeproj/project.xcworkspace/
+*.xcodeproj/xcuserdata/
+*.xcodeproj/xcshareddata/WorkspaceSettings.xcsettings
+*.moved-aside
+*.xcuserdatad/
+
+# SwiftPM
+.swiftpm/
+.build/
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/
+fastlane/test_output/
+
+# Archives
+*.xcarchive
+
+# App data
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# User settings
+*.env
+*.local
+
+# Misc
+*.DS_Store
+*.swp
+*.lock
+
+# VSCode
+.vscode/
+
+# Crashlytics
+crashlytics-build.properties
+
+# SPM
+Package.resolved
+
+# Xcode Previews
+Preview Content/
