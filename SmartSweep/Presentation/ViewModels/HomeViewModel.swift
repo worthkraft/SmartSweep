@@ -69,6 +69,7 @@ class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var isAnimating = false
     @Published var scanSuccessMessage: String?
+    @Published var showingScanResults = false
     
     private let cleanImagesUseCase: CleanImagesUseCase
     private let userRepository: UserRepositoryProtocol
@@ -119,62 +120,87 @@ class HomeViewModel: ObservableObject {
     }
     
     func performSmartScan() {
-        // Check permissions first
         imageRepository.requestPhotoLibraryAccess()
             .flatMap { [weak self] granted -> AnyPublisher<ScanResult, Error> in
-                guard let self = self else {
-                    return Fail(error: CleanError.unknown("Sistem error"))
-                        .eraseToAnyPublisher()
-                }
-                
-                guard granted else {
-                    self.showingPermissionAlert = true
-                    return Fail(error: CleanError.permissionDenied)
-                        .eraseToAnyPublisher()
-                }
-                
-                // Start scanning animation and progress
-                withAnimation(AppConstants.Animation.scanPulse) {
-                    self.isAnimating = true
-                }
-                
-                self.scanStatus = .scanning
-                self.scanProgress = 0.0
-                self.errorMessage = nil
-                self.scanSuccessMessage = nil
-                
-                // Simulate progress updates during scan
-                self.updateScanProgress()
-                
-                return self.cleanImagesUseCase.performSmartScan()
+                return self?.handlePermissionResult(granted) ??
+                    Fail(error: CleanError.unknown("Sistem error")).eraseToAnyPublisher()
             }
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
-                    // Stop the progress timer first
-                    self?.stopProgressTimer()
-                    
-                    withAnimation {
-                        self?.isAnimating = false
-                    }
-                    
-                    switch completion {
-                    case .finished:
-                        self?.scanProgress = 1.0 // Complete progress
-                        self?.scanStatus = .completed
-                        self?.showScanSuccessMessage()
-                    case .failure(let error):
-                        self?.scanStatus = .error(error.localizedDescription)
-                        self?.errorMessage = error.localizedDescription
-                        self?.scanProgress = 0.0
-                    }
+                    self?.handleScanCompletion(completion)
                 },
                 receiveValue: { [weak self] result in
-                    self?.scanResult = result
-                    self?.updateStorageInfo(with: result)
+                    self?.handleScanValue(result)
                 }
             )
             .store(in: &cancellables)
+    }
+    
+    private func handlePermissionResult(_ granted: Bool) -> AnyPublisher<ScanResult, Error> {
+        guard granted else {
+            self.showingPermissionAlert = true
+            return Fail(error: CleanError.permissionDenied).eraseToAnyPublisher()
+        }
+        
+        startScanningProcess()
+        return cleanImagesUseCase.performSmartScan()
+    }
+    
+    private func startScanningProcess() {
+        withAnimation(AppConstants.Animation.scanPulse) {
+            self.isAnimating = true
+        }
+        
+        self.scanStatus = .scanning
+        self.scanProgress = 0.0
+        self.errorMessage = nil
+        self.scanSuccessMessage = nil
+        
+        self.updateScanProgress()
+    }
+    
+    private func handleScanCompletion(_ completion: Subscribers.Completion<Error>) {
+        stopProgressTimer()
+        
+        withAnimation {
+            self.isAnimating = false
+        }
+        
+        switch completion {
+        case .finished:
+            completeScanSuccessfully()
+        case .failure(let error):
+            completeScanWithError(error)
+        }
+    }
+    
+    private func completeScanSuccessfully() {
+        self.scanProgress = 1.0
+        self.scanStatus = .completed
+        showScanSuccessMessage()
+        
+        scheduleResultsDisplay()
+    }
+    
+    private func completeScanWithError(_ error: Error) {
+        self.scanStatus = .error(error.localizedDescription)
+        self.errorMessage = error.localizedDescription
+        self.scanProgress = 0.0
+    }
+    
+    private func handleScanValue(_ result: ScanResult) {
+        self.scanResult = result
+        updateStorageInfo(with: result)
+    }
+    
+    private func scheduleResultsDisplay() {
+        if let result = self.scanResult,
+           !result.duplicateGroups.isEmpty || !result.temporaryImages.isEmpty {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                self.showingScanResults = true
+            }
+        }
     }
     
     func cleanDuplicates() {

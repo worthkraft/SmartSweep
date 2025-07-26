@@ -76,6 +76,9 @@ struct HomeView: View {
         .sheet(isPresented: $viewModel.showingSettings) {
             SettingsView(viewModel: viewModel)
         }
+        .sheet(isPresented: $viewModel.showingScanResults) {
+            ScanResultsView(scanResult: $viewModel.scanResult)
+        }
     }
     
     // MARK: - Header
