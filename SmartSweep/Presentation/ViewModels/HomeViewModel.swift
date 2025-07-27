@@ -26,11 +26,8 @@ class HomeViewModel: ObservableObject {
                 // Only update if still scanning and not yet at 90%
                 if self.scanStatus == .scanning && self.scanProgress < 0.9 {
                     self.scanProgress += 0.15 // Increment by 15%
-                } else if self.scanStatus != .scanning {
-                    // Scan completed, invalidate timer
-                    timer.invalidate()
-                    self.progressTimer = nil
                 }
+                // Don't stop timer here - let handleScanCompletion do it
             }
         }
     }
@@ -38,6 +35,7 @@ class HomeViewModel: ObservableObject {
     private func stopProgressTimer() {
         progressTimer?.invalidate()
         progressTimer = nil
+        print("Progress timer stopped") // Debug log
     }
     
     private func showScanSuccessMessage() {
@@ -120,18 +118,31 @@ class HomeViewModel: ObservableObject {
     }
     
     func performSmartScan() {
+        print("Starting smart scan...") // Debug log
         imageRepository.requestPhotoLibraryAccess()
             .flatMap { [weak self] granted -> AnyPublisher<ScanResult, Error> in
+                print("Permission result: \(granted)") // Debug log
                 return self?.handlePermissionResult(granted) ??
                     Fail(error: CleanError.unknown("Sistem error")).eraseToAnyPublisher()
             }
+            .timeout(.seconds(10), scheduler: DispatchQueue.main) // Add timeout
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
+                    print("Scan completion: \(completion)") // Debug log
                     self?.handleScanCompletion(completion)
                 },
                 receiveValue: { [weak self] result in
+                    print("Scan value received") // Debug log
                     self?.handleScanValue(result)
+                    
+                    // Force completion after receiving value
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        if self?.scanStatus == .scanning {
+                            print("Forcing scan completion") // Debug log
+                            self?.completeScanSuccessfully()
+                        }
+                    }
                 }
             )
             .store(in: &cancellables)
@@ -161,8 +172,10 @@ class HomeViewModel: ObservableObject {
     }
     
     private func handleScanCompletion(_ completion: Subscribers.Completion<Error>) {
+        // Stop progress timer immediately
         stopProgressTimer()
         
+        // Stop animations
         withAnimation {
             self.isAnimating = false
         }
@@ -176,6 +189,8 @@ class HomeViewModel: ObservableObject {
     }
     
     private func completeScanSuccessfully() {
+        guard scanStatus == .scanning else { return } // Prevent multiple calls
+        print("Scan completed successfully") // Debug log
         self.scanProgress = 1.0
         self.scanStatus = .completed
         showScanSuccessMessage()
@@ -190,6 +205,8 @@ class HomeViewModel: ObservableObject {
     }
     
     private func handleScanValue(_ result: ScanResult) {
+        print("Scan result received: \(result.duplicateGroups.count) duplicates, " +
+              "\(result.temporaryImages.count) temporary")
         self.scanResult = result
         updateStorageInfo(with: result)
     }
