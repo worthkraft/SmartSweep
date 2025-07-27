@@ -212,12 +212,9 @@ class HomeViewModel: ObservableObject {
     }
     
     private func scheduleResultsDisplay() {
-        if let result = self.scanResult,
-           !result.duplicateGroups.isEmpty || !result.temporaryImages.isEmpty {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                self.showingScanResults = true
-            }
-        }
+        // Always show results view after successful scan, regardless of findings
+        guard let scanResult else { return }
+        showingScanResults = true
     }
     
     func cleanDuplicates() {

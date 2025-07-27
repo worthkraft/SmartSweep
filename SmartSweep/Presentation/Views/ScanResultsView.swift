@@ -25,7 +25,11 @@ struct ScanResultsView: View {
                 headerView
                 
                 if let scanResult = scanResult {
-                    resultTabsView(scanResult: scanResult)
+                    if scanResult.duplicateGroups.isEmpty && scanResult.temporaryImages.isEmpty {
+                        cleanGalleryView
+                    } else {
+                        resultTabsView(scanResult: scanResult)
+                    }
                 } else {
                     emptyStateView
                 }
@@ -192,6 +196,65 @@ struct ScanResultsView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var cleanGalleryView: some View {
+        VStack(spacing: 24) {
+            VStack(spacing: 16) {
+                Image(systemName: "checkmark.circle.fill")
+                    .font(.system(size: 80))
+                    .foregroundColor(.green)
+                
+                Text("Galeri Bersih!")
+                    .font(.title)
+                    .fontWeight(.bold)
+                    .foregroundColor(.primary)
+                
+                Text("Tidak ada duplikat atau file temporary yang ditemukan")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            VStack(spacing: 12) {
+                HStack(spacing: 16) {
+                    VStack {
+                        Image(systemName: "doc.on.doc")
+                            .font(.title2)
+                            .foregroundColor(.blue)
+                        Text("0 Duplikat")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack {
+                        Image(systemName: "clock")
+                            .font(.title2)
+                            .foregroundColor(.orange)
+                        Text("0 Temporary")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    VStack {
+                        Image(systemName: "leaf.fill")
+                            .font(.title2)
+                            .foregroundColor(.green)
+                        Text("Galeri Optimal")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding()
+                .background(Color(.systemGray6))
+                .cornerRadius(12)
+            }
+            
+            Spacer()
+        }
+        .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
