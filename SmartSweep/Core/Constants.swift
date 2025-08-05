@@ -49,7 +49,7 @@ public struct AppConstants {
     // MARK: - Limits
     public struct Limits {
         public static let freeMaxImages = 100
-        static let freeScanCooldownDays = 7
+        public static let freeScanCooldownDays = 7
     }
     
     // MARK: - Animation
