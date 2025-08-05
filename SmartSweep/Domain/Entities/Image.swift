@@ -44,7 +44,7 @@ public struct DuplicateGroup: Identifiable {
     public let images: [SmartImage]
     public let totalSize: Int64
     
-    var keepImage: SmartImage? {
+    public var keepImage: SmartImage? {
         images.max { $0.creationDate < $1.creationDate }
     }
     
