@@ -30,7 +30,7 @@ public struct AppConstants {
         public static let premium = "Premium"
         public static let duplicates = "Duplikat"
         public static let temporaryImages = "Gambar Sementara"
-        static let screenshots = "Screenshot"
+        public static let screenshots = "Screenshot"
         public static let settings = "Pengaturan"
         public static let storage = "Penyimpanan"
         public static let cleanable = "Dapat Dibersihkan"
