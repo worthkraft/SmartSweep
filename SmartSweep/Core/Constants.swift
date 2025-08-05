@@ -48,7 +48,7 @@ public struct AppConstants {
     
     // MARK: - Limits
     public struct Limits {
-        static let freeMaxImages = 100
+        public static let freeMaxImages = 100
         static let freeScanCooldownDays = 7
     }
     
