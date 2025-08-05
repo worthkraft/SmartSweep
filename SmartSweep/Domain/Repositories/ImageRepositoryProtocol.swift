@@ -9,7 +9,7 @@ import Foundation
 import Photos
 import Combine
 
-protocol ImageRepositoryProtocol {
+public protocol ImageRepositoryProtocol {
     func requestPhotoLibraryAccess() -> AnyPublisher<Bool, Never>
     func fetchAllImages() -> AnyPublisher<[SmartImage], Error>
     func detectDuplicates(images: [SmartImage]) -> AnyPublisher<[DuplicateGroup], Error>

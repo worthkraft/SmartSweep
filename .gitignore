@@ -1,7 +1,6 @@
 # Xcode
 DerivedData/
 build/
-*.xcworkspace
 *.xcuserstate
 *.xcuserdata/
 *.xcodeproj/project.xcworkspace/
@@ -13,6 +12,15 @@ build/
 # SwiftPM
 .swiftpm/
 .build/
+
+# Tuist
+*.xcodeproj
+*.xcworkspace
+Derived/
+.tuist-generated/
+Graph.xcworkspace
+.cache/
+TuistEnvs/
 
 # CocoaPods
 Pods/
@@ -43,11 +51,17 @@ fastlane/test_output/
 *.swp
 *.lock
 
-# VSCode
+# IDE
 .vscode/
+.idea/
+.trae/
 
 # Crashlytics
 crashlytics-build.properties
+com_crashlytics_export_strings.xml
+
+# Tuist Local Configuration
+*.xcconfig.local
 
 # SPM
 Package.resolved

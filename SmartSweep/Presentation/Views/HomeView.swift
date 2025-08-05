@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
+import SmartSweepCore
 
-struct HomeView: View {
+public struct HomeView: View {
     @StateObject private var viewModel: HomeViewModel
     
     init(viewModel: HomeViewModel) {
         self._viewModel = StateObject(wrappedValue: viewModel)
     }
     
-    var body: some View {
+    public var body: some View {
         NavigationView {
             ZStack {
                 AppConstants.Colors.background
@@ -33,6 +34,16 @@ struct HomeView: View {
                             // Smart Scan Button
                             smartScanButton
                             
+                            // Progress Indicator
+                            if viewModel.scanStatus == .scanning {
+                                scanProgressView
+                            }
+                            
+                            // Success Message
+                            if let successMessage = viewModel.scanSuccessMessage {
+                                successMessageView(successMessage)
+                            }
+                            
                             // Suggested Actions
                             if viewModel.hasSuggestions {
                                 suggestedActions
@@ -46,7 +57,7 @@ struct HomeView: View {
         }
         .navigationViewStyle(StackNavigationViewStyle())
         .onAppear {
-            viewModel.requestPermissionAndScan()
+            viewModel.requestPermissionOnly()
         }
         .alert("Akses Galeri Diperlukan", isPresented: $viewModel.showingPermissionAlert) {
             Button("Pengaturan") {
@@ -65,6 +76,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $viewModel.showingSettings) {
             SettingsView(viewModel: viewModel)
+        }
+        .sheet(isPresented: $viewModel.showingScanResults) {
+            ScanResultsView(scanResult: $viewModel.scanResult)
         }
     }
     
@@ -146,36 +160,79 @@ struct HomeView: View {
     
     // MARK: - Smart Scan Button
     private var smartScanButton: some View {
-        Button(action: {
-            if viewModel.canPerformScan {
-                viewModel.performSmartScan()
-            } else if !viewModel.user.canPerformDeepScan {
-                viewModel.upgradeToPremium()
+        VStack(spacing: 8) {
+            Button(action: {
+                if viewModel.canPerformScan {
+                    viewModel.performSmartScan()
+                } else if !viewModel.user.canPerformDeepScan {
+                    viewModel.upgradeToPremium()
+                }
+            }) {
+                HStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .font(.title2)
+                        .scaleEffect(viewModel.isAnimating ? 1.1 : 1.0)
+                        .animation(AppConstants.Animation.scanPulse, value: viewModel.isAnimating)
+                    
+                    Text(viewModel.scanButtonText)
+                        .font(.headline)
+                        .fontWeight(.semibold)
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(
+                    RoundedRectangle(cornerRadius: 28)
+                        .fill(viewModel.canPerformScan ?
+                              AppConstants.Colors.primary : AppConstants.Colors.textSecondary)
+                        .scaleEffect(viewModel.isAnimating ? 1.05 : 1.0)
+                        .animation(AppConstants.Animation.buttonPress, value: viewModel.isAnimating)
+                )
             }
-        }) {
-            HStack(spacing: 12) {
-                Image(systemName: "magnifyingglass")
-                    .font(.title2)
-                    .scaleEffect(viewModel.isAnimating ? 1.1 : 1.0)
-                    .animation(AppConstants.Animation.scanPulse, value: viewModel.isAnimating)
-                
-                Text(viewModel.scanButtonText)
-                    .font(.headline)
-                    .fontWeight(.semibold)
+            .disabled(!viewModel.canPerformScan && viewModel.user.canPerformDeepScan)
+            .scaleEffect(viewModel.isAnimating ? 0.95 : 1.0)
+            .animation(AppConstants.Animation.buttonPress, value: viewModel.isAnimating)
+            
+            // Show limitation message for free users
+            if !viewModel.user.canPerformDeepScan {
+                Text("Batas scan mingguan tercapai. Upgrade ke Premium untuk scan unlimited.")
+                    .font(.caption)
+                    .foregroundColor(AppConstants.Colors.warning)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
             }
-            .foregroundColor(.white)
-            .frame(maxWidth: .infinity)
-            .frame(height: 56)
-            .background(
-                RoundedRectangle(cornerRadius: 28)
-                    .fill(viewModel.canPerformScan ? AppConstants.Colors.primary : AppConstants.Colors.textSecondary)
-                    .scaleEffect(viewModel.isAnimating ? 1.05 : 1.0)
-                    .animation(AppConstants.Animation.buttonPress, value: viewModel.isAnimating)
-            )
         }
-        .disabled(!viewModel.canPerformScan && viewModel.user.canPerformDeepScan)
-        .scaleEffect(viewModel.isAnimating ? 0.95 : 1.0)
-        .animation(AppConstants.Animation.buttonPress, value: viewModel.isAnimating)
+    }
+    
+    // MARK: - Scan Progress View
+    private var scanProgressView: some View {
+        VStack(spacing: 12) {
+            ProgressView(value: viewModel.scanProgress)
+                .progressViewStyle(LinearProgressViewStyle(tint: AppConstants.Colors.primary))
+                .scaleEffect(y: 2)
+            
+            Text(viewModel.scanProgressText)
+                .font(.subheadline)
+                .foregroundColor(AppConstants.Colors.textSecondary)
+        }
+        .padding(.horizontal, 20)
+        .transition(.opacity.combined(with: .scale))
+    }
+    
+    // MARK: - Success Message View
+    private func successMessageView(_ message: String) -> some View {
+        Text(message)
+            .font(.subheadline)
+            .multilineTextAlignment(.center)
+            .foregroundColor(AppConstants.Colors.success)
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(AppConstants.Colors.success.opacity(0.1))
+                    .stroke(AppConstants.Colors.success.opacity(0.3), lineWidth: 1)
+            )
+            .padding(.horizontal, 20)
+            .transition(.opacity.combined(with: .scale))
     }
     
     // MARK: - Suggested Actions

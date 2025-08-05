@@ -10,15 +10,16 @@ import Combine
 import Vision
 import UIKit
 import Photos
+import SmartSweepCore
 
-class DetectDuplicatesUseCase {
+public class DetectDuplicatesUseCase {
     private let imageRepository: ImageRepositoryProtocol
     
-    init(imageRepository: ImageRepositoryProtocol) {
+    public init(imageRepository: ImageRepositoryProtocol) {
         self.imageRepository = imageRepository
     }
     
-    func detectDuplicates(in images: [SmartImage]) -> AnyPublisher<[DuplicateGroup], Error> {
+    public func detectDuplicates(in images: [SmartImage]) -> AnyPublisher<[DuplicateGroup], Error> {
         return Future { promise in
             Task {
                 do {

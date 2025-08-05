@@ -7,17 +7,18 @@
 
 import Foundation
 import Combine
+import SmartSweepCore
 
-class CleanImagesUseCase {
+public class CleanImagesUseCase {
     private let imageRepository: ImageRepositoryProtocol
     private let userRepository: UserRepositoryProtocol
     
-    init(imageRepository: ImageRepositoryProtocol, userRepository: UserRepositoryProtocol) {
+    public init(imageRepository: ImageRepositoryProtocol, userRepository: UserRepositoryProtocol) {
         self.imageRepository = imageRepository
         self.userRepository = userRepository
     }
     
-    func performSmartScan() -> AnyPublisher<ScanResult, Error> {
+    public func performSmartScan() -> AnyPublisher<ScanResult, Error> {
         return userRepository.getCurrentUser()
             .flatMap { user -> AnyPublisher<ScanResult, Error> in
                 guard user.canPerformDeepScan else {
@@ -51,43 +52,53 @@ class CleanImagesUseCase {
             .eraseToAnyPublisher()
     }
     
-    func cleanDuplicates(_ groups: [DuplicateGroup]) -> AnyPublisher<Void, Error> {
+    public func cleanDuplicates(_ groups: [DuplicateGroup]) -> AnyPublisher<Void, Error> {
         let imagesToDelete = groups.flatMap { $0.duplicatesToDelete }
         return imageRepository.deleteImages(imagesToDelete)
     }
     
-    func cleanTemporaryImages(_ images: [SmartImage]) -> AnyPublisher<Void, Error> {
+    public func cleanTemporaryImages(_ images: [SmartImage]) -> AnyPublisher<Void, Error> {
         return imageRepository.deleteImages(images)
     }
 }
 
-struct ScanResult {
-    let duplicateGroups: [DuplicateGroup]
-    let temporaryImages: [SmartImage]
-    let storageInfo: StorageInfo
-    let isWatermarked: Bool
+public struct ScanResult {
+    public let duplicateGroups: [DuplicateGroup]
+    public let temporaryImages: [SmartImage]
+    public let storageInfo: StorageInfo
+    public let isWatermarked: Bool
     
-    var totalCleanableSpace: Int64 {
+    public var totalCleanableSpace: Int64 {
         let duplicateSpace = duplicateGroups.reduce(0) { $0 + $1.savableSpace }
         let temporarySpace = temporaryImages.reduce(0) { $0 + $1.fileSize }
         return duplicateSpace + temporarySpace
     }
     
-    var duplicateCount: Int {
+    public var duplicateCount: Int {
         duplicateGroups.reduce(0) { $0 + $1.duplicatesToDelete.count }
     }
     
-    var temporaryCount: Int {
+    public var temporaryCount: Int {
         temporaryImages.count
+    }
+    
+    public init(duplicateGroups: [DuplicateGroup],
+                temporaryImages: [SmartImage],
+                storageInfo: StorageInfo,
+                isWatermarked: Bool) {
+        self.duplicateGroups = duplicateGroups
+        self.temporaryImages = temporaryImages
+        self.storageInfo = storageInfo
+        self.isWatermarked = isWatermarked
     }
 }
 
-enum CleanError: LocalizedError {
+public enum CleanError: LocalizedError {
     case scanLimitReached
     case permissionDenied
     case unknown(String)
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .scanLimitReached:
             return "Batas pemindaian mingguan tercapai. Upgrade ke Premium untuk pemindaian unlimited."

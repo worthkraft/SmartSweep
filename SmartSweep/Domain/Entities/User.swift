@@ -7,14 +7,14 @@
 
 import Foundation
 
-struct User: Codable {
-    let id: String
-    var isPremium: Bool
-    var scanCount: Int
-    var lastScanDate: Date?
-    var purchaseDate: Date?
+public struct User: Codable {
+    public let id: String
+    public var isPremium: Bool
+    public var scanCount: Int
+    public var lastScanDate: Date?
+    public var purchaseDate: Date?
     
-    init() {
+    public init() {
         self.id = UUID().uuidString
         self.isPremium = false
         self.scanCount = 0
@@ -22,7 +22,7 @@ struct User: Codable {
         self.purchaseDate = nil
     }
     
-    var canPerformDeepScan: Bool {
+    public var canPerformDeepScan: Bool {
         if isPremium { return true }
         
         guard let lastScan = lastScanDate else { return true }
@@ -31,7 +31,7 @@ struct User: Codable {
         return daysSinceLastScan >= 7 // Free tier: 1 deep scan per week
     }
     
-    var maxImagesPerScan: Int {
+    public var maxImagesPerScan: Int {
         isPremium ? Int.max : 100
     }
 }

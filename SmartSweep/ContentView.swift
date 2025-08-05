@@ -6,6 +6,9 @@
 //
 
 import SwiftUI
+import SmartSweepPresentation
+import SmartSweepData
+import SmartSweepDomain
 
 struct ContentView: View {
     private let imageRepository = ImageRepository()
