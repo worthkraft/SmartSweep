@@ -42,7 +42,7 @@ public struct SmartImage: Identifiable, Hashable {
 public struct DuplicateGroup: Identifiable {
     public let id = UUID()
     public let images: [SmartImage]
-    let totalSize: Int64
+    public let totalSize: Int64
     
     var keepImage: SmartImage? {
         images.max { $0.creationDate < $1.creationDate }
