@@ -9,11 +9,13 @@ import Foundation
 import Photos
 import Combine
 import CoreLocation
+import SmartSweepCore
+import SmartSweepDomain
 
-class ImageRepository: ImageRepositoryProtocol {
+public class ImageRepository: ImageRepositoryProtocol {
     private let photoLibrary = PHPhotoLibrary.shared()
     
-    func requestPhotoLibraryAccess() -> AnyPublisher<Bool, Never> {
+    public func requestPhotoLibraryAccess() -> AnyPublisher<Bool, Never> {
         return Future { promise in
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
                 DispatchQueue.main.async {
@@ -24,7 +26,7 @@ class ImageRepository: ImageRepositoryProtocol {
         .eraseToAnyPublisher()
     }
     
-    func fetchAllImages() -> AnyPublisher<[SmartImage], Error> {
+    public func fetchAllImages() -> AnyPublisher<[SmartImage], Error> {
         return Future { promise in
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
@@ -43,12 +45,12 @@ class ImageRepository: ImageRepositoryProtocol {
         .eraseToAnyPublisher()
     }
     
-    func detectDuplicates(images: [SmartImage]) -> AnyPublisher<[DuplicateGroup], Error> {
+    public func detectDuplicates(images: [SmartImage]) -> AnyPublisher<[DuplicateGroup], Error> {
         let detectUseCase = DetectDuplicatesUseCase(imageRepository: self)
         return detectUseCase.detectDuplicates(in: images)
     }
     
-    func detectTemporaryImages(images: [SmartImage]) -> AnyPublisher<[SmartImage], Error> {
+    public func detectTemporaryImages(images: [SmartImage]) -> AnyPublisher<[SmartImage], Error> {
         return Future { promise in
             let temporaryImages = images.filter { image in
                 self.isTemporaryImage(image)
@@ -58,7 +60,7 @@ class ImageRepository: ImageRepositoryProtocol {
         .eraseToAnyPublisher()
     }
     
-    func deleteImages(_ images: [SmartImage]) -> AnyPublisher<Void, Error> {
+    public func deleteImages(_ images: [SmartImage]) -> AnyPublisher<Void, Error> {
         return Future { promise in
             PHPhotoLibrary.shared().performChanges({
                 let assets = images.map { $0.asset }
@@ -74,7 +76,7 @@ class ImageRepository: ImageRepositoryProtocol {
         .eraseToAnyPublisher()
     }
     
-    func getStorageInfo() -> AnyPublisher<StorageInfo, Error> {
+    public func getStorageInfo() -> AnyPublisher<StorageInfo, Error> {
         return Future { promise in
             do {
                 let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!

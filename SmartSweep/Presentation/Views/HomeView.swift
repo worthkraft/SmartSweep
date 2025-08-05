@@ -6,15 +6,16 @@
 //
 
 import SwiftUI
+import SmartSweepCore
 
-struct HomeView: View {
+public struct HomeView: View {
     @StateObject private var viewModel: HomeViewModel
     
     init(viewModel: HomeViewModel) {
         self._viewModel = StateObject(wrappedValue: viewModel)
     }
     
-    var body: some View {
+    public var body: some View {
         NavigationView {
             ZStack {
                 AppConstants.Colors.background

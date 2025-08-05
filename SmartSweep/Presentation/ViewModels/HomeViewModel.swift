@@ -8,9 +8,12 @@
 import Foundation
 import Combine
 import SwiftUI
+import SmartSweepCore
+import SmartSweepDomain
+import SmartSweepData
 
 @MainActor
-class HomeViewModel: ObservableObject {
+public class HomeViewModel: ObservableObject {
     @Published var scanStatus: ScanStatus = .idle
     
     private func updateScanProgress() {

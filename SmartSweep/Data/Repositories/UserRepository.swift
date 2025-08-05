@@ -8,22 +8,24 @@
 import Foundation
 import Combine
 import StoreKit
+import SmartSweepCore
+import SmartSweepDomain
 
-class UserRepository: UserRepositoryProtocol {
+public class UserRepository: UserRepositoryProtocol {
     private let userDefaults = UserDefaults.standard
     private let productID = "com.smartsweep.premium"
     
     @Published private var currentUser: User = User()
     
-    init() {
+    public init() {
         loadUser()
     }
     
-    func getCurrentUser() -> AnyPublisher<User, Never> {
+    public func getCurrentUser() -> AnyPublisher<User, Never> {
         return $currentUser.eraseToAnyPublisher()
     }
     
-    func updateUser(_ user: User) -> AnyPublisher<Void, Never> {
+    public func updateUser(_ user: User) -> AnyPublisher<Void, Never> {
         return Future { promise in
             self.currentUser = user
             self.saveUser(user)
@@ -32,7 +34,7 @@ class UserRepository: UserRepositoryProtocol {
         .eraseToAnyPublisher()
     }
     
-    func purchasePremium() -> AnyPublisher<Bool, Error> {
+    public func purchasePremium() -> AnyPublisher<Bool, Error> {
         return Future { promise in
             Task {
                 do {
@@ -81,7 +83,7 @@ class UserRepository: UserRepositoryProtocol {
         .eraseToAnyPublisher()
     }
     
-    func restorePurchases() -> AnyPublisher<Bool, Error> {
+    public func restorePurchases() -> AnyPublisher<Bool, Error> {
         return Future { promise in
             Task {
                 do {

@@ -9,19 +9,19 @@ import Foundation
 import Photos
 import CoreLocation
 
-struct SmartImage: Identifiable, Hashable {
-    let id: String
-    let asset: PHAsset
-    let creationDate: Date
-    let fileSize: Int64
-    let filename: String
-    let location: CLLocation?
-    let isScreenshot: Bool
-    let isDuplicate: Bool
-    let isTemporary: Bool
-    let duplicateGroup: String?
+public struct SmartImage: Identifiable, Hashable {
+    public let id: String
+    public let asset: PHAsset
+    public let creationDate: Date
+    public let fileSize: Int64
+    public let filename: String
+    public let location: CLLocation?
+    public let isScreenshot: Bool
+    public let isDuplicate: Bool
+    public let isTemporary: Bool
+    public let duplicateGroup: String?
     
-    init(asset: PHAsset) {
+    public init(asset: PHAsset) {
         self.id = asset.localIdentifier
         self.asset = asset
         self.creationDate = asset.creationDate ?? Date()
@@ -39,9 +39,9 @@ struct SmartImage: Identifiable, Hashable {
     }
 }
 
-struct DuplicateGroup: Identifiable {
-    let id = UUID()
-    let images: [SmartImage]
+public struct DuplicateGroup: Identifiable {
+    public let id = UUID()
+    public let images: [SmartImage]
     let totalSize: Int64
     
     var keepImage: SmartImage? {
@@ -53,41 +53,48 @@ struct DuplicateGroup: Identifiable {
         return images.filter { $0.id != keep.id }
     }
     
-    var savableSpace: Int64 {
+    public var savableSpace: Int64 {
         duplicatesToDelete.reduce(0) { $0 + $1.fileSize }
     }
 }
 
-struct StorageInfo {
-    let totalSpace: Int64
-    let usedSpace: Int64
-    let availableSpace: Int64
-    let cleanableSpace: Int64
+public struct StorageInfo {
+    public let totalSpace: Int64
+    public let usedSpace: Int64
+    public let availableSpace: Int64
+    public let cleanableSpace: Int64
     
-    var usagePercentage: Double {
+    public init(totalSpace: Int64, usedSpace: Int64, availableSpace: Int64, cleanableSpace: Int64) {
+        self.totalSpace = totalSpace
+        self.usedSpace = usedSpace
+        self.availableSpace = availableSpace
+        self.cleanableSpace = cleanableSpace
+    }
+    
+    public var usagePercentage: Double {
         Double(usedSpace) / Double(totalSpace)
     }
     
-    var formattedUsedSpace: String {
+    public var formattedUsedSpace: String {
         ByteCountFormatter.string(fromByteCount: usedSpace, countStyle: .file)
     }
     
-    var formattedTotalSpace: String {
+    public var formattedTotalSpace: String {
         ByteCountFormatter.string(fromByteCount: totalSpace, countStyle: .file)
     }
     
-    var formattedCleanableSpace: String {
+    public var formattedCleanableSpace: String {
         ByteCountFormatter.string(fromByteCount: cleanableSpace, countStyle: .file)
     }
 }
 
-enum ScanStatus: Equatable {
+public enum ScanStatus: Equatable {
     case idle
     case scanning
     case completed
     case error(String)
     
-    static func == (lhs: ScanStatus, rhs: ScanStatus) -> Bool {
+    public static func == (lhs: ScanStatus, rhs: ScanStatus) -> Bool {
         switch (lhs, rhs) {
         case (.idle, .idle): return true
         case (.scanning, .scanning): return true
