@@ -48,7 +48,8 @@ let project = Project(
                 .target(name: "SmartSweepDomain"),
                 .target(name: "SmartSweepData"),
                 .target(name: "SmartSweepPresentation")
-            ]
+            ],
+            settings: .settings(base: ["DEVELOPMENT_TEAM": "2H46N4N76A"])
         ),
         
         // Core Framework
@@ -59,7 +60,8 @@ let project = Project(
             bundleId: "com.smartsweep.SmartSweepCore",
             deploymentTargets: .iOS("18.2"),
             sources: ["SmartSweep/Core/**"],
-            dependencies: []
+            dependencies: [],
+            settings: .settings(base: ["DEVELOPMENT_TEAM": "2H46N4N76A"])
         ),
         
         // Domain Framework
@@ -72,7 +74,8 @@ let project = Project(
             sources: ["SmartSweep/Domain/**"],
             dependencies: [
                 .target(name: "SmartSweepCore")
-            ]
+            ],
+            settings: .settings(base: ["DEVELOPMENT_TEAM": "2H46N4N76A"])
         ),
         
         // Data Framework
@@ -86,7 +89,8 @@ let project = Project(
             dependencies: [
                 .target(name: "SmartSweepCore"),
                 .target(name: "SmartSweepDomain")
-            ]
+            ],
+            settings: .settings(base: ["DEVELOPMENT_TEAM": "2H46N4N76A"])
         ),
         
         // Presentation Framework
@@ -101,7 +105,8 @@ let project = Project(
                 .target(name: "SmartSweepCore"),
                 .target(name: "SmartSweepDomain"),
                 .target(name: "SmartSweepData")
-            ]
+            ],
+            settings: .settings(base: ["DEVELOPMENT_TEAM": "2H46N4N76A"])
         ),
         
         // Unit Tests
@@ -118,7 +123,8 @@ let project = Project(
                 .target(name: "SmartSweepDomain"),
                 .target(name: "SmartSweepData"),
                 .target(name: "SmartSweepPresentation")
-            ]
+            ],
+            settings: .settings(base: ["DEVELOPMENT_TEAM": "2H46N4N76A"])
         ),
         
         // UI Tests
@@ -131,7 +137,8 @@ let project = Project(
             sources: ["SmartSweepUITests/**"],
             dependencies: [
                 .target(name: "SmartSweep")
-            ]
+            ],
+            settings: .settings(base: ["DEVELOPMENT_TEAM": "2H46N4N76A"])
         )
     ]
 )

@@ -79,26 +79,49 @@ public class ImageRepository: ImageRepositoryProtocol {
     public func getStorageInfo() -> AnyPublisher<StorageInfo, Error> {
         return Future { promise in
             do {
-                let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
-                let attributes = try FileManager.default.attributesOfFileSystem(forPath: documentDirectory.path)
+                // Get device storage information using URLResourceKey
+                let fileURL = URL(fileURLWithPath: "/")
+                let values = try fileURL.resourceValues(forKeys: [.volumeTotalCapacityKey, .volumeAvailableCapacityForImportantUsageKey])
                 
-                let totalSpace = attributes[.systemSize] as? Int64 ?? 0
-                let freeSpace = attributes[.systemFreeSize] as? Int64 ?? 0
-                let usedSpace = totalSpace - freeSpace
+                // Get the actual device storage capacity and available space
+                let totalSpace = Int64(values.volumeTotalCapacity ?? 0)
+                let availableSpace = Int64(values.volumeAvailableCapacityForImportantUsage ?? 0)
+                let usedSpace = totalSpace - availableSpace
                 
                 // Estimate cleanable space (this would be calculated from scan results)
                 let cleanableSpace: Int64 = 0
                 
                 let storageInfo = StorageInfo(
-                    totalSpace: totalSpace,
-                    usedSpace: usedSpace,
-                    availableSpace: freeSpace,
+                    totalSpace: Int64(totalSpace),
+                    usedSpace: Int64(usedSpace),
+                    availableSpace: Int64(availableSpace),
                     cleanableSpace: cleanableSpace
                 )
                 
                 promise(.success(storageInfo))
             } catch {
-                promise(.failure(error))
+                // Fallback to FileManager if URLResourceValues fails
+                do {
+                    let documentDirectory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
+                    let attributes = try FileManager.default.attributesOfFileSystem(forPath: documentDirectory.path)
+                    
+                    let totalSpace = attributes[.systemSize] as? Int64 ?? 0
+                    let freeSpace = attributes[.systemFreeSize] as? Int64 ?? 0
+                    let usedSpace = totalSpace - freeSpace
+                    
+                    let cleanableSpace: Int64 = 0
+                    
+                    let storageInfo = StorageInfo(
+                        totalSpace: totalSpace,
+                        usedSpace: usedSpace,
+                        availableSpace: freeSpace,
+                        cleanableSpace: cleanableSpace
+                    )
+                    
+                    promise(.success(storageInfo))
+                } catch {
+                    promise(.failure(error))
+                }
             }
         }
         .eraseToAnyPublisher()
