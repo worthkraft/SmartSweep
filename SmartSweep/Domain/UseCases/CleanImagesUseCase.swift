@@ -7,7 +7,6 @@
 
 import Foundation
 import Combine
-import SmartSweepCore
 
 public class CleanImagesUseCase {
     private let imageRepository: ImageRepositoryProtocol

@@ -9,8 +9,6 @@ import Foundation
 import Photos
 import Combine
 import CoreLocation
-import SmartSweepCore
-import SmartSweepDomain
 
 public class ImageRepository: ImageRepositoryProtocol {
     private let photoLibrary = PHPhotoLibrary.shared()

@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import SmartSweep
 
 final class SmartSweepUITests: XCTestCase {
 

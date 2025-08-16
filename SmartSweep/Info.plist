@@ -8,6 +8,10 @@
     <string>SmartSweep memerlukan akses untuk menghapus gambar duplikat dan sementara dari galeri foto Anda.</string>
     <key>CFBundleDisplayName</key>
     <string>SmartSweep</string>
+    <key>CFBundleIdentifier</key>
+    <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+    <key>CFBundleExecutable</key>
+    <string>$(EXECUTABLE_NAME)</string>
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
     <key>CFBundleVersion</key>

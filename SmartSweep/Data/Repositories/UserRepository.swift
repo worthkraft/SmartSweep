@@ -8,8 +8,6 @@
 import Foundation
 import Combine
 import StoreKit
-import SmartSweepCore
-import SmartSweepDomain
 
 public class UserRepository: UserRepositoryProtocol {
     private let userDefaults = UserDefaults.standard

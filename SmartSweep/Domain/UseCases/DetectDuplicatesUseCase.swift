@@ -10,7 +10,6 @@ import Combine
 import Vision
 import UIKit
 import Photos
-import SmartSweepCore
 
 public class DetectDuplicatesUseCase {
     private let imageRepository: ImageRepositoryProtocol

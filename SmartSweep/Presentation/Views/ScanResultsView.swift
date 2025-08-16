@@ -8,8 +8,6 @@
 
 import SwiftUI
 import Photos
-import SmartSweepCore
-import SmartSweepDomain
 
 struct ScanResultsView: View {
     @Environment(\.dismiss) private var dismiss

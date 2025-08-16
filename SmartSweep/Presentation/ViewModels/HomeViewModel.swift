@@ -8,9 +8,6 @@
 import Foundation
 import Combine
 import SwiftUI
-import SmartSweepCore
-import SmartSweepDomain
-import SmartSweepData
 
 @MainActor
 public class HomeViewModel: ObservableObject {
