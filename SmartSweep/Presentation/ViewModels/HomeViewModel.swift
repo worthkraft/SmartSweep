@@ -284,7 +284,7 @@ public class HomeViewModel: ObservableObject {
                     }
                 },
                 receiveValue: { _ in
-                    // Acknowledge parameter; user updates are handled by the repository's currentUser publisher
+                    // Premium purchase success handled via user repository's currentUser publisher
                 }
             )
             .store(in: &cancellables)
