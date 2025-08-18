@@ -16,7 +16,7 @@ public struct DuplicateGroup: Identifiable {
         images.max { $0.creationDate < $1.creationDate }
     }
     
-    var duplicatesToDelete: [SmartImage] {
+    public var duplicatesToDelete: [SmartImage] {
         guard let keep = keepImage else { return images }
         return images.filter { $0.id != keep.id }
     }
