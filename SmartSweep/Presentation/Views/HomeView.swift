@@ -191,7 +191,7 @@ public struct HomeView: View {
         .shadow(color: Color.black.opacity(0.4), radius: 15, x: 0, y: 8)
         .shadow(color: Color.black.opacity(0.2), radius: 5, x: 0, y: 2)
     }
-        // MARK: - Smart Clean Button
+// MARK: - Smart Clean Button
     private var smartCleanButton: some View {
         Button(action: {
             if viewModel.canPerformScan {
