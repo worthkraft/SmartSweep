@@ -48,6 +48,8 @@ public struct AppConstants {
         public static let completed = "Selesai"
         public static let upgrade = "Upgrade ke Premium"
         public static let storageHint = "Clean your storage to reclaim free space"
+        public static let usedLabel = "Used"
+        public static let ofLabel = "of"
     }
     
     // MARK: - Pricing
@@ -72,10 +74,10 @@ public struct AppConstants {
     
     // MARK: - Typography
     public struct Typography {
-        public static let titleBold = Font.system(size: 28, weight: .bold, design: .default)
-        public static let headlineBold = Font.system(size: 22, weight: .bold, design: .default)
-        public static let bodyMedium = Font.system(size: 16, weight: .medium, design: .default)
-        public static let captionMedium = Font.system(size: 14, weight: .medium, design: .default)
-        public static let smallMedium = Font.system(size: 12, weight: .medium, design: .default)
+        public static let titleBold = Font.system(size: 28, weight: .bold, design: .rounded)
+        public static let headlineBold = Font.system(size: 22, weight: .bold, design: .rounded)
+        public static let bodyMedium = Font.system(size: 16, weight: .medium, design: .rounded)
+        public static let captionMedium = Font.system(size: 14, weight: .medium, design: .rounded)
+        public static let smallMedium = Font.system(size: 12, weight: .medium, design: .rounded)
     }
 }

@@ -102,7 +102,11 @@ public struct HomeView: View {
     
     // MARK: - Progress Ring View
     private var progressRingView: some View {
-        ZStack {
+        let used = viewModel.storageInfo?.usedSpace ?? 0
+        let total = viewModel.storageInfo?.totalSpace ?? max(used, 1)
+        let pct = Double(used) / Double(total)
+        
+        return ZStack {
             // Background Ring
             Circle()
                 .stroke(
@@ -113,7 +117,7 @@ public struct HomeView: View {
             
             // Progress Ring with Gradient
             Circle()
-                .trim(from: 0, to: 0.75) // 75% progress
+                .trim(from: 0, to: pct)
                 .stroke(
                     LinearGradient(
                         colors: [
@@ -127,19 +131,27 @@ public struct HomeView: View {
                 )
                 .frame(width: 240, height: 240)
                 .rotationEffect(.degrees(-90))
-                .animation(AppConstants.Animation.progressBar, value: viewModel.storageInfo?.usagePercentage)
+                .animation(AppConstants.Animation.progressBar, value: pct)
+            
+            // Dark Inner Fill
+            Circle()
+                .fill(AppConstants.Colors.cardSurface)
+                .frame(width: 208, height: 208)
+                .shadow(color: .black.opacity(0.5), radius: 8, x: 0, y: 6)
             
             // Center Content
             VStack(spacing: 8) {
-                Text("75%")
-                    .font(.system(size: 48, weight: .bold, design: .default))
+                Text("\(Int(pct * 100))%")
+                    .font(.system(size: 48, weight: .bold, design: .rounded))
                     .foregroundColor(AppConstants.Colors.textPrimaryDark)
                 
-                Text("Used")
+                Text(AppConstants.Strings.usedLabel)
                     .font(AppConstants.Typography.bodyMedium)
                     .foregroundColor(AppConstants.Colors.textPrimaryDark)
                 
-                Text("192 GB of 256 GB")
+                let usedText = ByteCountFormatter.string(fromByteCount: Int64(used), countStyle: .file)
+                let totalText = ByteCountFormatter.string(fromByteCount: Int64(total), countStyle: .file)
+                Text("\(usedText) \(AppConstants.Strings.ofLabel) \(totalText)")
                     .font(AppConstants.Typography.captionMedium)
                     .foregroundColor(AppConstants.Colors.textSecondaryDark)
             }
@@ -205,6 +217,8 @@ public struct HomeView: View {
                             )
                         )
                 )
+                .clipShape(Circle())
+                .contentShape(Circle())
                 .scaleEffect(viewModel.isAnimating ? 1.05 : 1.0)
                 .animation(AppConstants.Animation.scanPulse, value: viewModel.isAnimating)
         }
@@ -212,79 +226,11 @@ public struct HomeView: View {
         .shadow(color: AppConstants.Colors.accentPinkStart.opacity(0.4), radius: 20, x: 0, y: 10)
         .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 8)
     }
-    }
     
     private func openSettings() {
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else { return }
         UIApplication.shared.open(settingsUrl)
     }
-
-// MARK: - Suggestion Card
-private struct SuggestionCard: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let actionTitle: String
-    let isPremium: Bool
-    let action: () -> Void
-    
-    init(
-        icon: String,
-        title: String,
-        subtitle: String,
-        actionTitle: String,
-        isPremium: Bool = false,
-        action: @escaping () -> Void
-    ) {
-        self.icon = icon
-        self.title = title
-        self.subtitle = subtitle
-        self.actionTitle = actionTitle
-        self.isPremium = isPremium
-        self.action = action
-    }
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            // Icon
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(isPremium ? AppConstants.Colors.warning : AppConstants.Colors.primary)
-                .frame(width: 24, height: 24)
-            
-            // Content
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(AppConstants.Colors.textPrimary)
-                
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(AppConstants.Colors.textSecondary)
-            }
-            
-            Spacer()
-            
-            // Action Button
-            Button(action: action) {
-                Text(actionTitle)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                    .foregroundColor(isPremium ? AppConstants.Colors.warning : AppConstants.Colors.primary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(isPremium ? AppConstants.Colors.warning : AppConstants.Colors.primary, lineWidth: 1)
-                    )
-            }
-        }
-        .padding()
-        .background(AppConstants.Colors.cardBackground)
-        .cornerRadius(12)
-    }
-}
 
 // MARK: - Settings View
 private struct SettingsView: View {
@@ -358,4 +304,5 @@ private struct SettingsView: View {
             }
         }
     }
+}
 }
