@@ -10,6 +10,8 @@ import Photos
 import Combine
 import CoreLocation
 
+// The ImageRepositoryError is now in a separate file
+
 public class ImageRepository: ImageRepositoryProtocol {
     private let photoLibrary = PHPhotoLibrary.shared()
     
@@ -147,22 +149,5 @@ public class ImageRepository: ImageRepositoryProtocol {
         let isRecent = daysSinceCreation <= 3
         
         return isRecent && (hasPaymentKeyword || hasLocationKeyword || hasTempKeyword)
-    }
-}
-
-enum ImageRepositoryError: LocalizedError {
-    case deletionFailed
-    case accessDenied
-    case unknown(String)
-    
-    var errorDescription: String? {
-        switch self {
-        case .deletionFailed:
-            return "Gagal menghapus gambar"
-        case .accessDenied:
-            return "Akses ditolak"
-        case .unknown(let message):
-            return message
-        }
     }
 }

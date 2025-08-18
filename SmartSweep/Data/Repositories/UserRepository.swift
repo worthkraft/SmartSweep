@@ -9,6 +9,8 @@ import Foundation
 import Combine
 import StoreKit
 
+// The UserRepositoryError is now in a separate file
+
 public class UserRepository: UserRepositoryProtocol {
     private let userDefaults = UserDefaults.standard
     private let productID = "com.smartsweep.premium"
@@ -52,14 +54,18 @@ public class UserRepository: UserRepositoryProtocol {
                         case .verified(let transaction):
                             await transaction.finish()
                             
-                            // Update user to premium
-                            var updatedUser = self.currentUser
-                            updatedUser.isPremium = true
-                            updatedUser.purchaseDate = Date()
-                            
+                            // Update user to premium - capture current user to avoid concurrency issues
+                            let currentUserSnapshot = self.currentUser
+                            let updatedUserSnapshot: User = {
+                                var userCopy = currentUserSnapshot
+                                userCopy.isPremium = true
+                                userCopy.purchaseDate = Date()
+                                return userCopy
+                            }()
+
                             await MainActor.run {
-                                self.currentUser = updatedUser
-                                self.saveUser(updatedUser)
+                                self.currentUser = updatedUserSnapshot
+                                self.saveUser(updatedUserSnapshot)
                             }
                             
                             promise(.success(true))
@@ -91,13 +97,18 @@ public class UserRepository: UserRepositoryProtocol {
                         switch result {
                         case .verified(let transaction):
                             if transaction.productID == self.productID {
-                                var updatedUser = self.currentUser
-                                updatedUser.isPremium = true
-                                updatedUser.purchaseDate = transaction.purchaseDate
-                                
+                                // Capture current user to avoid concurrency issues
+                                let currentUserSnapshot = self.currentUser
+                                let updatedUserSnapshot: User = {
+                                    var userCopy = currentUserSnapshot
+                                    userCopy.isPremium = true
+                                    userCopy.purchaseDate = transaction.purchaseDate
+                                    return userCopy
+                                }()
+
                                 await MainActor.run {
-                                    self.currentUser = updatedUser
-                                    self.saveUser(updatedUser)
+                                    self.currentUser = updatedUserSnapshot
+                                    self.saveUser(updatedUserSnapshot)
                                 }
                                 
                                 promise(.success(true))
@@ -129,23 +140,6 @@ public class UserRepository: UserRepositoryProtocol {
     private func saveUser(_ user: User) {
         if let data = try? JSONEncoder().encode(user) {
             userDefaults.set(data, forKey: "user")
-        }
-    }
-}
-
-enum UserRepositoryError: LocalizedError {
-    case productNotFound
-    case verificationFailed
-    case unknown(String)
-    
-    var errorDescription: String? {
-        switch self {
-        case .productNotFound:
-            return "Produk tidak ditemukan"
-        case .verificationFailed:
-            return "Verifikasi pembelian gagal"
-        case .unknown(let message):
-            return message
         }
     }
 }
