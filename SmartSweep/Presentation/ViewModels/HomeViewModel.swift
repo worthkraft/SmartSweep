@@ -8,9 +8,6 @@
 import Foundation
 import Combine
 import SwiftUI
-import SmartSweepCore
-import SmartSweepDomain
-import SmartSweepData
 
 @MainActor
 public class HomeViewModel: ObservableObject {
@@ -92,8 +89,9 @@ public class HomeViewModel: ObservableObject {
     }
     
     deinit {
-        Task { @MainActor in
-            stopProgressTimer()
+        // Stop timer synchronously to avoid capturing self in async context
+        if let timer = progressTimer {
+            timer.invalidate()
         }
         cancellables.removeAll()
     }
@@ -123,6 +121,7 @@ public class HomeViewModel: ObservableObject {
     func performSmartScan() {
         print("Starting smart scan...") // Debug log
         imageRepository.requestPhotoLibraryAccess()
+            .tryMap { $0 }
             .flatMap { [weak self] granted -> AnyPublisher<ScanResult, Error> in
                 print("Permission result: \(granted)") // Debug log
                 return self?.handlePermissionResult(granted) ??
@@ -216,7 +215,7 @@ public class HomeViewModel: ObservableObject {
     
     private func scheduleResultsDisplay() {
         // Always show results view after successful scan, regardless of findings
-        guard let scanResult else { return }
+        guard scanResult != nil else { return }
         showingScanResults = true
     }
     
@@ -284,10 +283,8 @@ public class HomeViewModel: ObservableObject {
                         self?.errorMessage = error.localizedDescription
                     }
                 },
-                receiveValue: { [weak self] success in
-                    if success {
-                        // Premium purchase successful, user will be updated automatically
-                    }
+                receiveValue: { _ in
+                    // Premium purchase success handled via user repository's currentUser publisher
                 }
             )
             .store(in: &cancellables)
