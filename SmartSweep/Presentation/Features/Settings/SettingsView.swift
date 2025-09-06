@@ -1,8 +1,8 @@
 //
-//  SettingsView.swift
+//  HomeSettingsView.swift
 //  SmartSweep
 //
-//  Created by Rizky Hasibuan on 9/6/25.
+//  Created by Rizky Hasibuan on 7/9/25.
 //
 
 import SwiftUI

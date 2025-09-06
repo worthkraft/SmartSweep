@@ -9,7 +9,7 @@
 import SwiftUI
 import Photos
 
-struct TemporaryImageCard: View {
+struct ScanImageCard: View {
     let image: SmartImage
     @State private var thumbnailImage: UIImage?
     

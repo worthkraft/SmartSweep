@@ -172,7 +172,7 @@ struct ScanResultsView: View {
             LazyVGrid(columns: columns, spacing: 8) {
                 ForEach(scanResult.temporaryImages.indices, id: \.self) { imageIndex in
                     let image = scanResult.temporaryImages[imageIndex]
-                    TemporaryImageCard(image: image)
+                    ScanImageCard(image: image)
                 }
             }
             .padding(16)
