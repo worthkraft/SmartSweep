@@ -17,14 +17,23 @@ struct ContentView: View {
     
     private var homeViewModel: HomeViewModel {
         HomeViewModel(
-            cleanImagesUseCase: cleanImagesUseCase,
             userRepository: userRepository,
             imageRepository: imageRepository
         )
     }
     
+    private var scanViewModel: ScanResultsViewModel {
+        ScanResultsViewModel(
+            cleanImagesUseCase: cleanImagesUseCase,
+            imageRepository: imageRepository
+        )
+    }
+    
     var body: some View {
-        HomeView(viewModel: homeViewModel)
+        HomeView(
+            homeViewModel: homeViewModel,
+            scanViewModel: scanViewModel
+        )
     }
 }
 

@@ -8,10 +8,12 @@
 import SwiftUI
 
 public struct HomeView: View {
-    @StateObject private var viewModel: HomeViewModel
+    @StateObject private var homeViewModel: HomeViewModel
+    @StateObject private var scanViewModel: ScanResultsViewModel
     
-    init(viewModel: HomeViewModel) {
-        self._viewModel = StateObject(wrappedValue: viewModel)
+    init(homeViewModel: HomeViewModel, scanViewModel: ScanResultsViewModel) {
+        self._homeViewModel = StateObject(wrappedValue: homeViewModel)
+        self._scanViewModel = StateObject(wrappedValue: scanViewModel)
     }
     
     public var body: some View {
@@ -55,9 +57,9 @@ public struct HomeView: View {
         .navigationViewStyle(StackNavigationViewStyle())
         .preferredColorScheme(.dark)
         .onAppear {
-            viewModel.requestPermissionOnly()
+            scanViewModel.requestPermissionOnly()
         }
-        .alert("Akses Galeri Diperlukan", isPresented: $viewModel.showingPermissionAlert) {
+        .alert("Akses Galeri Diperlukan", isPresented: $scanViewModel.showingPermissionAlert) {
             Button("Pengaturan") {
                 openSettings()
             }
@@ -65,18 +67,18 @@ public struct HomeView: View {
         } message: {
             Text("SmartSweep memerlukan akses ke galeri foto untuk dapat membersihkan gambar duplikat dan sementara.")
         }
-        .alert("Error", isPresented: .constant(viewModel.errorMessage != nil)) {
+        .alert("Error", isPresented: .constant(scanViewModel.errorMessage != nil)) {
             Button("OK") {
-                viewModel.errorMessage = nil
+                scanViewModel.errorMessage = nil
             }
         } message: {
-            Text(viewModel.errorMessage ?? "")
+            Text(scanViewModel.errorMessage ?? "")
         }
-        .sheet(isPresented: $viewModel.showingSettings) {
-            SettingsView(viewModel: viewModel)
+        .sheet(isPresented: $homeViewModel.showingSettings) {
+            SettingsView(viewModel: homeViewModel)
         }
-        .sheet(isPresented: $viewModel.showingScanResults) {
-            ScanResultsView(scanResult: $viewModel.scanResult)
+        .sheet(isPresented: $homeViewModel.showingScanResults) {
+            ScanResultsView(scanResult: $scanViewModel.scanResult)
         }
     }
     
@@ -90,7 +92,7 @@ public struct HomeView: View {
             Spacer()
             
             Button(action: {
-                viewModel.showingSettings = true
+                homeViewModel.showingSettings = true
             }) {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 18))
@@ -102,8 +104,8 @@ public struct HomeView: View {
     
     // MARK: - Progress Ring View
     private var progressRingView: some View {
-        let used = viewModel.storageInfo?.usedSpace ?? 0
-        let total = viewModel.storageInfo?.totalSpace ?? max(used, 1)
+        let used = homeViewModel.storageInfo?.usedSpace ?? 0
+        let total = homeViewModel.storageInfo?.totalSpace ?? max(used, 1)
         let pct = Double(used) / Double(total)
         
         return ZStack {
@@ -194,10 +196,10 @@ public struct HomeView: View {
 // MARK: - Smart Clean Button
     private var smartCleanButton: some View {
         Button(action: {
-            if viewModel.canPerformScan {
-                viewModel.performSmartScan()
-            } else if !viewModel.user.canPerformDeepScan {
-                viewModel.upgradeToPremium()
+            if homeViewModel.canPerformDeepScan {
+                scanViewModel.performSmartScan()
+            } else if !homeViewModel.user.canPerformDeepScan {
+                homeViewModel.upgradeToPremium()
             }
         }) {
             Text(AppConstants.Strings.smartClean)
@@ -219,10 +221,10 @@ public struct HomeView: View {
                 )
                 .clipShape(Circle())
                 .contentShape(Circle())
-                .scaleEffect(viewModel.isAnimating ? 1.05 : 1.0)
-                .animation(AppConstants.Animation.scanPulse, value: viewModel.isAnimating)
+                .scaleEffect(scanViewModel.isAnimating ? 1.05 : 1.0)
+                .animation(AppConstants.Animation.scanPulse, value: scanViewModel.isAnimating)
         }
-        .disabled(!viewModel.canPerformScan && viewModel.user.canPerformDeepScan)
+        .disabled(!homeViewModel.canPerformDeepScan && homeViewModel.user.canPerformDeepScan)
         .shadow(color: AppConstants.Colors.accentPinkStart.opacity(0.4), radius: 20, x: 0, y: 10)
         .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 8)
     }
@@ -255,7 +257,7 @@ private struct SettingsView: View {
                     // Premium Status
                     VStack(spacing: 16) {
                         let statusColor = viewModel.user.isPremium ?
-                            AppConstants.Colors.success : AppConstants.Colors.textPrimaryDark
+                            AppConstants.Colors.success : AppConstants.Colors.warning
                         
                         Text(viewModel.user.isPremium ? "Premium Active" : "Free Tier")
                             .font(.title2)
