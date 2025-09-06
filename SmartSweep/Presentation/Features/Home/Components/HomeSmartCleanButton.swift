@@ -1,5 +1,5 @@
 //
-//  SmartCleanButton.swift
+//  HomeSmartCleanButton.swift
 //  SmartSweep
 //
 //  Created by Rizky Hasibuan on 7/9/25.
@@ -7,19 +7,21 @@
 
 import SwiftUI
 
-public struct SmartCleanButton: View {
-    let action: () -> Void
-    let isEnabled: Bool
+struct HomeSmartCleanButton: View {
+    let canPerformDeepScan: Bool
+    let userCanPerformDeepScan: Bool
     let isAnimating: Bool
+    let onScanTapped: () -> Void
+    let onUpgradeTapped: () -> Void
     
-    public init(action: @escaping () -> Void, isEnabled: Bool, isAnimating: Bool) {
-        self.action = action
-        self.isEnabled = isEnabled
-        self.isAnimating = isAnimating
-    }
-    
-    public var body: some View {
-        Button(action: action) {
+    var body: some View {
+        Button {
+            if canPerformDeepScan {
+                onScanTapped()
+            } else if !userCanPerformDeepScan {
+                onUpgradeTapped()
+            }
+        } label: {
             Text(AppConstants.Strings.smartClean)
                 .font(AppConstants.Typography.headlineBold)
                 .foregroundColor(AppConstants.Colors.textPrimaryDark)
@@ -42,7 +44,7 @@ public struct SmartCleanButton: View {
                 .scaleEffect(isAnimating ? 1.05 : 1.0)
                 .animation(AppConstants.Animation.scanPulse, value: isAnimating)
         }
-        .disabled(!isEnabled)
+        .disabled(!canPerformDeepScan && userCanPerformDeepScan)
         .shadow(color: AppConstants.Colors.accentPinkStart.opacity(0.4), radius: 20, x: 0, y: 10)
         .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 8)
     }

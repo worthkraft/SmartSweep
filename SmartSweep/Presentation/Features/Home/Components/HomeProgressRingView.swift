@@ -1,5 +1,5 @@
 //
-//  ProgressRingView.swift
+//  HomeProgressRingView.swift
 //  SmartSweep
 //
 //  Created by Rizky Hasibuan on 7/9/25.
@@ -7,19 +7,15 @@
 
 import SwiftUI
 
-public struct ProgressRingView: View {
-    let usedSpace: Int64
-    let totalSpace: Int64
+struct HomeProgressRingView: View {
+    let storageInfo: StorageInfo?
     
-    public init(usedSpace: Int64, totalSpace: Int64) {
-        self.usedSpace = usedSpace
-        self.totalSpace = totalSpace
-    }
-    
-    public var body: some View {
-        let pct = Double(usedSpace) / Double(max(totalSpace, 1))
+    var body: some View {
+        let used = storageInfo?.usedSpace ?? 0
+        let total = storageInfo?.totalSpace ?? max(used, 1)
+        let pct = Double(used) / Double(total)
         
-        ZStack {
+        return ZStack {
             // Background Ring
             Circle()
                 .stroke(
@@ -62,8 +58,8 @@ public struct ProgressRingView: View {
                     .font(AppConstants.Typography.bodyMedium)
                     .foregroundColor(AppConstants.Colors.textPrimaryDark)
                 
-                let usedText = ByteCountFormatter.string(fromByteCount: usedSpace, countStyle: .file)
-                let totalText = ByteCountFormatter.string(fromByteCount: totalSpace, countStyle: .file)
+                let usedText = ByteCountFormatter.string(fromByteCount: Int64(used), countStyle: .file)
+                let totalText = ByteCountFormatter.string(fromByteCount: Int64(total), countStyle: .file)
                 Text("\(usedText) \(AppConstants.Strings.ofLabel) \(totalText)")
                     .font(AppConstants.Typography.captionMedium)
                     .foregroundColor(AppConstants.Colors.textSecondaryDark)
