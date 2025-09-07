@@ -12,7 +12,7 @@ import SwiftUI
 @MainActor
 public class HomeViewModel: ObservableObject {
     @Published var storageInfo: StorageInfo?
-    @Published var user: User = User()
+    @Published var user = User()
     @Published var showingSettings = false
     @Published var errorMessage: String?
     @Published var showingScanResults = false

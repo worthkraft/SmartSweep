@@ -6,10 +6,9 @@
 //
 
 import SwiftUI
+import Foundation
 
 struct HomeHeaderView: View {
-    let onSettingsTapped: () -> Void
-    
     var body: some View {
         HStack {
             Text(AppConstants.Strings.appName)
@@ -18,7 +17,7 @@ struct HomeHeaderView: View {
             
             Spacer()
             
-            Button(action: onSettingsTapped) {
+            NavigationLink(value: NavigationDestination.settings) {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 18))
                     .foregroundColor(AppConstants.Colors.textSecondaryDark)

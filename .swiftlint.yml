@@ -1,0 +1,118 @@
+# SwiftLint configuration for SmartSweep
+# Created based on project code style analysis
+
+# Opt-in rules
+opt_in_rules:
+  - array_init
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - discouraged_object_literal
+  - empty_count
+  - empty_string
+  - explicit_init
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - last_where
+  - legacy_random
+  - literal_expression_end_indentation
+  - multiline_parameters
+  - multiline_parameters_brackets
+  - operator_usage_whitespace
+  - overridden_super_call
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - strict_fileprivate
+  - toggle_bool
+  - trailing_closure
+  - unneeded_parentheses_in_closure_argument
+  - vertical_parameter_alignment_on_call
+  - yoda_condition
+
+# Disabled rules
+disabled_rules:
+  - todo
+  - trailing_whitespace
+  - line_length
+  - vertical_whitespace
+  - trailing_newline
+
+# Customized rules
+force_cast: warning
+force_try: warning
+force_unwrapping: warning
+
+# Custom rule configurations
+redundant_type_annotation: warning
+pattern_matching_keywords: warning
+
+# Line length configuration
+line_length:
+  warning: 120
+  error: 150
+  ignores_comments: true
+  ignores_urls: true
+  ignores_function_declarations: true
+
+# Nesting configuration
+nesting:
+  type_level:
+    warning: 3
+  function_level:
+    warning: 5
+
+# Type name configuration
+type_name:
+  min_length: 3
+  max_length: 50
+
+# Variable name configuration
+identifier_name:
+  min_length: 2
+  max_length: 40
+  excluded:
+    - id
+    - URL
+    - x
+    - y
+    - i
+    - j
+    - to
+    - at
+    - of
+
+# Function body length
+function_body_length:
+  warning: 60
+  error: 100
+
+# File length
+file_length:
+  warning: 400
+  error: 600
+
+# Cyclomatic complexity
+cyclomatic_complexity:
+  warning: 12
+  error: 15
+
+# Reporter type
+reporter: "xcode"
+
+# Excluded paths
+excluded:
+  - Pods
+  - SmartSweepTests
+  - SmartSweepUITests
+  - DerivedData
+  - .build
+  - fastlane
+  - vendor
+  - Carthage
+  - "**/Generated"

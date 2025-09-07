@@ -11,9 +11,9 @@ import SwiftUI
 public struct AppConstants {
     // MARK: - Colors
     public struct Colors {
-        public static let primary = Color(red: 42/255, green: 183/255, blue: 202/255) // #2AB7CA
+        public static let primary = Color(red: 42 / 255, green: 183 / 255, blue: 202 / 255) // #2AB7CA
         public static let background = Color.white
-        public static let textPrimary = Color(red: 74/255, green: 74/255, blue: 74/255) // #4A4A4A
+        public static let textPrimary = Color(red: 74 / 255, green: 74 / 255, blue: 74 / 255) // #4A4A4A
         public static let textSecondary = Color.gray
         public static let cardBackground = Color(.systemGray6)
         public static let success = Color.green
@@ -21,13 +21,13 @@ public struct AppConstants {
         public static let error = Color.red
         
         // MARK: - Dark Theme Colors
-        public static let backgroundDarkTop = Color(red: 13/255, green: 14/255, blue: 16/255) // #0D0E10
-        public static let backgroundDarkBottom = Color(red: 17/255, green: 18/255, blue: 23/255) // #111217
-        public static let accentPinkStart = Color(red: 255/255, green: 42/255, blue: 109/255) // #FF2A6D
-        public static let accentPinkEnd = Color(red: 255/255, green: 126/255, blue: 134/255) // #FF7E86
-        public static let cardSurface = Color(red: 23/255, green: 24/255, blue: 28/255) // #17181C
-        public static let textPrimaryDark = Color(red: 255/255, green: 255/255, blue: 255/255) // #FFFFFF
-        public static let textSecondaryDark = Color(red: 207/255, green: 207/255, blue: 211/255) // #CFCFD3
+        public static let backgroundDarkTop = Color(red: 13 / 255, green: 14 / 255, blue: 16 / 255) // #0D0E10
+        public static let backgroundDarkBottom = Color(red: 17 / 255, green: 18 / 255, blue: 23 / 255) // #111217
+        public static let accentPinkStart = Color(red: 255 / 255, green: 42 / 255, blue: 109 / 255) // #FF2A6D
+        public static let accentPinkEnd = Color(red: 255 / 255, green: 126 / 255, blue: 134 / 255) // #FF7E86
+        public static let cardSurface = Color(red: 23 / 255, green: 24 / 255, blue: 28 / 255) // #17181C
+        public static let textPrimaryDark = Color(red: 255 / 255, green: 255 / 255, blue: 255 / 255) // #FFFFFF
+        public static let textSecondaryDark = Color(red: 207 / 255, green: 207 / 255, blue: 211 / 255) // #CFCFD3
     }
     
     // MARK: - Strings

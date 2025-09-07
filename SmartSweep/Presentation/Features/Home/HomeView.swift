@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 public struct HomeView: View {
     @StateObject private var homeViewModel: HomeViewModel
@@ -17,7 +18,7 @@ public struct HomeView: View {
     }
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             ZStack {
                 // Vertical Gradient Background
                 LinearGradient(
@@ -32,9 +33,7 @@ public struct HomeView: View {
                 
                 VStack(spacing: 0) {
                     // Header
-                    HomeHeaderView(onSettingsTapped: {
-                        homeViewModel.showingSettings = true
-                    })
+                    HomeHeaderView()
                     .padding(.top, 20)
                     
                     Spacer()
@@ -52,12 +51,10 @@ public struct HomeView: View {
                             canPerformDeepScan: homeViewModel.canPerformDeepScan,
                             userCanPerformDeepScan: homeViewModel.user.canPerformDeepScan,
                             isAnimating: scanViewModel.isAnimating,
-                            onScanTapped: {
-                                scanViewModel.performSmartScan()
-                            },
                             onUpgradeTapped: {
                                 homeViewModel.upgradeToPremium()
-                            }
+                            },
+                            scanViewModel: scanViewModel
                         )
                     }
                     .padding(.horizontal, 40)
@@ -65,8 +62,15 @@ public struct HomeView: View {
                     Spacer()
                 }
             }
+            .navigationDestination(for: NavigationDestination.self) { destination in
+                switch destination {
+                case .settings:
+                    SettingsView(viewModel: homeViewModel)
+                case .scanResults:
+                    ScanResultsView(scanResult: $scanViewModel.scanResult)
+                }
+            }
         }
-        .navigationViewStyle(StackNavigationViewStyle())
         .preferredColorScheme(.dark)
         .onAppear {
             scanViewModel.requestPermissionOnly()
@@ -85,12 +89,6 @@ public struct HomeView: View {
             }
         } message: {
             Text(scanViewModel.errorMessage ?? "")
-        }
-        .sheet(isPresented: $homeViewModel.showingSettings) {
-            HomeSettingsView(viewModel: homeViewModel)
-        }
-        .sheet(isPresented: $homeViewModel.showingScanResults) {
-            ScanResultsView(scanResult: $scanViewModel.scanResult)
         }
     }
     
