@@ -97,3 +97,31 @@ public struct HomeView: View {
         UIApplication.shared.open(settingsUrl)
     }
 }
+
+#Preview {
+    let imageRepository = ImageRepository()
+    let userRepository = UserRepository()
+    
+    var cleanImagesUseCase: CleanImagesUseCase {
+        CleanImagesUseCase(imageRepository: imageRepository, userRepository: userRepository)
+    }
+    
+    var homeViewModel: HomeViewModel {
+        HomeViewModel(
+            userRepository: userRepository,
+            imageRepository: imageRepository
+        )
+    }
+    
+    var scanViewModel: ScanResultsViewModel {
+        ScanResultsViewModel(
+            cleanImagesUseCase: cleanImagesUseCase,
+            imageRepository: imageRepository
+        )
+    }
+    
+    HomeView(
+        homeViewModel: homeViewModel,
+        scanViewModel: scanViewModel
+    )
+}
