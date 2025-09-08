@@ -32,10 +32,6 @@ public struct HomeView: View {
                 .ignoresSafeArea()
                 
                 VStack(spacing: 0) {
-                    // Header
-                    HomeHeaderView()
-                    .padding(.top, 20)
-                    
                     Spacer()
                     
                     // Main Content - Centered Layout
@@ -68,6 +64,21 @@ public struct HomeView: View {
                     SettingsView(viewModel: homeViewModel)
                 case .scanResults:
                     ScanResultsView(scanResult: $scanViewModel.scanResult)
+                }
+            }
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text(AppConstants.Strings.appName)
+                        .font(AppConstants.Typography.titleBold)
+                        .foregroundColor(AppConstants.Colors.textPrimaryDark)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    NavigationLink(value: NavigationDestination.settings) {
+                        Image(systemName: "gearshape.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(AppConstants.Colors.textSecondaryDark)
+                    }
                 }
             }
         }
