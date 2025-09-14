@@ -11,8 +11,6 @@ import SwiftUI
 
 @MainActor
 public class ScanResultsViewModel: ObservableObject {
-    @Published var scanStatus: ScanStatus = .idle
-    @Published var scanProgress: Double = 0.0
     @Published var scanResult: ScanResult?
     @Published var errorMessage: String?
     @Published var isAnimating = false
@@ -24,12 +22,10 @@ public class ScanResultsViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     private var progressTimer: Timer?
     
-    init(
-        cleanImagesUseCase: CleanImagesUseCase,
-        imageRepository: ImageRepositoryProtocol
-    ) {
+    public init(cleanImagesUseCase: CleanImagesUseCase, imageRepository: ImageRepositoryProtocol, scanResult: ScanResult? = nil) {
         self.cleanImagesUseCase = cleanImagesUseCase
         self.imageRepository = imageRepository
+        self.scanResult = scanResult
     }
     
     deinit {
@@ -42,65 +38,14 @@ public class ScanResultsViewModel: ObservableObject {
     
     // MARK: - Public Methods
     
-    func requestPermissionAndScan() {
-        imageRepository.requestPhotoLibraryAccess()
-            .sink { [weak self] granted in
-                if granted {
-                    self?.performSmartScan()
-                } else {
-                    self?.showingPermissionAlert = true
-                }
-            }
-            .store(in: &cancellables)
-    }
+
     
-    func requestPermissionOnly() {
-        imageRepository.requestPhotoLibraryAccess()
-            .sink { [weak self] granted in
-                if !granted {
-                    self?.showingPermissionAlert = true
-                }
-            }
-            .store(in: &cancellables)
-    }
+
     
-    func performSmartScan() {
-        print("Starting smart scan...") // Debug log
-        imageRepository.requestPhotoLibraryAccess()
-            .tryMap { $0 }
-            .flatMap { [weak self] granted -> AnyPublisher<ScanResult, Error> in
-                print("Permission result: \(granted)") // Debug log
-                return self?.handlePermissionResult(granted) ??
-                    Fail(error: CleanError.unknown("Sistem error")).eraseToAnyPublisher()
-            }
-            .timeout(.seconds(10), scheduler: DispatchQueue.main) // Add timeout
-            .receive(on: DispatchQueue.main)
-            .sink(
-                receiveCompletion: { [weak self] completion in
-                    print("Scan completion: \(completion)") // Debug log
-                    self?.handleScanCompletion(completion)
-                },
-                receiveValue: { [weak self] result in
-                    print("Scan value received") // Debug log
-                    self?.handleScanValue(result)
-                    
-                    // Force completion after receiving value
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        if self?.scanStatus == .scanning {
-                            print("Forcing scan completion") // Debug log
-                            self?.completeScanSuccessfully()
-                        }
-                    }
-                }
-            )
-            .store(in: &cancellables)
-    }
+
     
     func cleanDuplicates() {
         guard let result = scanResult else { return }
-        
-        scanStatus = .scanning
-        scanProgress = 0.0
         
         cleanImagesUseCase.cleanDuplicates(result.duplicateGroups)
             .receive(on: DispatchQueue.main)
@@ -108,13 +53,9 @@ public class ScanResultsViewModel: ObservableObject {
                 receiveCompletion: { [weak self] completion in
                     switch completion {
                     case .finished:
-                        self?.scanProgress = 1.0
-                        self?.scanStatus = .completed
-                        self?.performSmartScan() // Refresh data
-                    case .failure(let error):
-                        self?.scanStatus = .error(error.localizedDescription)
+                         break // Cleaning completed
+                     case .failure(let error):
                         self?.errorMessage = error.localizedDescription
-                        self?.scanProgress = 0.0
                     }
                 },
                 receiveValue: { _ in }
@@ -125,22 +66,15 @@ public class ScanResultsViewModel: ObservableObject {
     func cleanTemporaryImages() {
         guard let result = scanResult else { return }
         
-        scanStatus = .scanning
-        scanProgress = 0.0
-        
         cleanImagesUseCase.cleanTemporaryImages(result.temporaryImages)
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
                     switch completion {
                     case .finished:
-                        self?.scanProgress = 1.0
-                        self?.scanStatus = .completed
-                        self?.performSmartScan() // Refresh data
-                    case .failure(let error):
-                        self?.scanStatus = .error(error.localizedDescription)
+                         break // Cleaning completed
+                     case .failure(let error):
                         self?.errorMessage = error.localizedDescription
-                        self?.scanProgress = 0.0
                     }
                 },
                 receiveValue: { _ in }
@@ -151,32 +85,13 @@ public class ScanResultsViewModel: ObservableObject {
     func clearScanResults() {
         stopProgressTimer() // Stop any running progress timer
         scanResult = nil
-        scanStatus = .idle
-        scanProgress = 0.0
         errorMessage = nil
         scanSuccessMessage = nil
     }
     
     // MARK: - Private Methods
     
-    private func updateScanProgress() {
-        scanProgress = 0.1 // Start at 10%
-        
-        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.6, repeats: true) { [weak self] timer in
-            guard let self else {
-                timer.invalidate()
-                return
-            }
-            
-            Task { @MainActor in
-                // Only update if still scanning and not yet at 90%
-                if self.scanStatus == .scanning && self.scanProgress < 0.9 {
-                    self.scanProgress += 0.15 // Increment by 15%
-                }
-                // Don't stop timer here - let handleScanCompletion do it
-            }
-        }
-    }
+
     
     private func stopProgressTimer() {
         progressTimer?.invalidate()
@@ -219,12 +134,8 @@ public class ScanResultsViewModel: ObservableObject {
             self.isAnimating = true
         }
         
-        self.scanStatus = .scanning
-        self.scanProgress = 0.0
         self.errorMessage = nil
         self.scanSuccessMessage = nil
-        
-        self.updateScanProgress()
     }
     
     private func handleScanCompletion(_ completion: Subscribers.Completion<Error>) {
@@ -245,17 +156,12 @@ public class ScanResultsViewModel: ObservableObject {
     }
     
     private func completeScanSuccessfully() {
-        guard scanStatus == .scanning else { return } // Prevent multiple calls
         print("Scan completed successfully") // Debug log
-        self.scanProgress = 1.0
-        self.scanStatus = .completed
         showScanSuccessMessage()
     }
     
     private func completeScanWithError(_ error: Error) {
-        self.scanStatus = .error(error.localizedDescription)
         self.errorMessage = error.localizedDescription
-        self.scanProgress = 0.0
     }
     
     private func handleScanValue(_ result: ScanResult) {
@@ -267,31 +173,9 @@ public class ScanResultsViewModel: ObservableObject {
 
 // MARK: - Computed Properties
 extension ScanResultsViewModel {
-    var scanButtonText: String {
-        switch scanStatus {
-        case .idle:
-            return AppConstants.Strings.smartScan
-        case .scanning:
-            return AppConstants.Strings.scanning
-        case .completed:
-            return AppConstants.Strings.smartScan
-        case .error:
-            return AppConstants.Strings.smartScan
-        }
-    }
+
     
-    var scanProgressText: String {
-        switch scanStatus {
-        case .scanning:
-            return "Memindai... \(Int(scanProgress * 100))%"
-        case .completed:
-            return "Scan Selesai"
-        case .error:
-            return "Scan Gagal"
-        case .idle:
-            return ""
-        }
-    }
+
     
     var hasSuggestions: Bool {
         guard let result = scanResult else { return false }

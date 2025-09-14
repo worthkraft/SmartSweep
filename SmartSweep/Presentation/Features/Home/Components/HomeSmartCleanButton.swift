@@ -14,19 +14,12 @@ struct HomeSmartCleanButton: View {
     let isAnimating: Bool
     let onUpgradeTapped: () -> Void
     
-    // Reference to the scan view model
-    @ObservedObject var scanViewModel: ScanResultsViewModel
-    
     var body: some View {
         Group {
             if canPerformDeepScan {
-                NavigationLink(value: NavigationDestination.scanResults) {
+                NavigationLink(value: NavigationDestination.scanning) {
                     smartCleanButtonContent
                 }
-                .simultaneousGesture(TapGesture().onEnded {
-                    // Perform the scan when tapped
-                    scanViewModel.performSmartScan()
-                })
             } else {
                 Button {
                     if !userCanPerformDeepScan {
@@ -59,8 +52,8 @@ struct HomeSmartCleanButton: View {
             )
             .clipShape(Circle())
             .contentShape(Circle())
-            .scaleEffect(isAnimating ? 1.05 : 1.0)
-            .animation(AppConstants.Animation.scanPulse, value: isAnimating)
+            .scaleEffect(1.0)
+            .animation(.none, value: false)
             .disabled(!canPerformDeepScan && userCanPerformDeepScan)
             .shadow(color: AppConstants.Colors.accentPinkStart.opacity(0.4), radius: 20, x: 0, y: 10)
             .shadow(color: Color.black.opacity(0.3), radius: 15, x: 0, y: 8)

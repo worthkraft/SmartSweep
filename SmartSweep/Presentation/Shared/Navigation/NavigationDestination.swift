@@ -9,5 +9,6 @@ import Foundation
 
 enum NavigationDestination: Hashable {
     case settings
+    case scanning
     case scanResults
 }

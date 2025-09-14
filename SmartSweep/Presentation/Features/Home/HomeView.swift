@@ -11,6 +11,8 @@ import UIKit
 public struct HomeView: View {
     @StateObject private var homeViewModel: HomeViewModel
     @StateObject private var scanViewModel: ScanResultsViewModel
+    @State private var navigateToResults = false
+    @State private var scanResult: ScanResult?
     
     init(homeViewModel: HomeViewModel, scanViewModel: ScanResultsViewModel) {
         self._homeViewModel = StateObject(wrappedValue: homeViewModel)
@@ -46,11 +48,10 @@ public struct HomeView: View {
                         HomeSmartCleanButton(
                             canPerformDeepScan: homeViewModel.canPerformDeepScan,
                             userCanPerformDeepScan: homeViewModel.user.canPerformDeepScan,
-                            isAnimating: scanViewModel.isAnimating,
+                            isAnimating: false,
                             onUpgradeTapped: {
                                 homeViewModel.upgradeToPremium()
-                            },
-                            scanViewModel: scanViewModel
+                            }
                         )
                     }
                     .padding(.horizontal, 40)
@@ -62,10 +63,59 @@ public struct HomeView: View {
                 switch destination {
                 case .settings:
                     SettingsView(viewModel: homeViewModel)
+                case .scanning:
+                    let imageRepository = ImageRepository()
+                    let userRepository = UserRepository()
+                    let cleanImagesUseCase = CleanImagesUseCase(
+                        imageRepository: imageRepository,
+                        userRepository: userRepository
+                    )
+                    let scanningViewModel = ScanningViewModel(
+                        cleanImagesUseCase: cleanImagesUseCase,
+                        imageRepository: imageRepository
+                    )
+                    ScanningView(
+                        viewModel: scanningViewModel,
+                        navigateToResults: $navigateToResults,
+                        scanResult: $scanResult
+                    )
                 case .scanResults:
-                    ScanResultsView(scanResult: $scanViewModel.scanResult)
+                    let imageRepository = ImageRepository()
+                    let userRepository = UserRepository()
+                    let cleanImagesUseCase = CleanImagesUseCase(
+                        imageRepository: imageRepository,
+                        userRepository: userRepository
+                    )
+                    let resultsViewModel = ScanResultsViewModel(
+                        cleanImagesUseCase: cleanImagesUseCase,
+                        imageRepository: imageRepository,
+                        scanResult: scanResult
+                    )
+                    ScanResultsView(scanResult: .constant(scanResult))
                 }
             }
+            
+            // Hidden NavigationLink for programmatic navigation to scan results
+            NavigationLink(
+                destination: {
+                    let imageRepository = ImageRepository()
+                    let userRepository = UserRepository()
+                    let cleanImagesUseCase = CleanImagesUseCase(
+                        imageRepository: imageRepository,
+                        userRepository: userRepository
+                    )
+                    let resultsViewModel = ScanResultsViewModel(
+                        cleanImagesUseCase: cleanImagesUseCase,
+                        imageRepository: imageRepository,
+                        scanResult: scanResult
+                    )
+                    return ScanResultsView(scanResult: .constant(scanResult))
+                }(),
+                isActive: $navigateToResults
+            ) {
+                EmptyView()
+            }
+            .hidden()
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text(AppConstants.Strings.appName)
@@ -84,22 +134,16 @@ public struct HomeView: View {
         }
         .preferredColorScheme(.dark)
         .onAppear {
-            scanViewModel.requestPermissionOnly()
+            // View appeared
         }
-        .alert("Akses Galeri Diperlukan", isPresented: $scanViewModel.showingPermissionAlert) {
-            Button("Pengaturan") {
-                openSettings()
+
+
+        .onChange(of: navigateToResults) { shouldNavigate in
+            if shouldNavigate, let result = scanResult {
+                scanViewModel.scanResult = result
+                navigateToResults = false
+                scanResult = nil
             }
-            Button("Batal", role: .cancel) { }
-        } message: {
-            Text("SmartSweep memerlukan akses ke galeri foto untuk dapat membersihkan gambar duplikat dan sementara.")
-        }
-        .alert("Error", isPresented: .constant(scanViewModel.errorMessage != nil)) {
-            Button("OK") {
-                scanViewModel.errorMessage = nil
-            }
-        } message: {
-            Text(scanViewModel.errorMessage ?? "")
         }
     }
     
