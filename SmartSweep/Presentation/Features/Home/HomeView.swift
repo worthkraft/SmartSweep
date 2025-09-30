@@ -80,42 +80,13 @@ public struct HomeView: View {
                         scanResult: $scanResult
                     )
                 case .scanResults:
-                    let imageRepository = ImageRepository()
-                    let userRepository = UserRepository()
-                    let cleanImagesUseCase = CleanImagesUseCase(
-                        imageRepository: imageRepository,
-                        userRepository: userRepository
-                    )
-                    let resultsViewModel = ScanResultsViewModel(
-                        cleanImagesUseCase: cleanImagesUseCase,
-                        imageRepository: imageRepository,
-                        scanResult: scanResult
-                    )
                     ScanResultsView(scanResult: .constant(scanResult))
                 }
             }
             
-            // Hidden NavigationLink for programmatic navigation to scan results
-            NavigationLink(
-                destination: {
-                    let imageRepository = ImageRepository()
-                    let userRepository = UserRepository()
-                    let cleanImagesUseCase = CleanImagesUseCase(
-                        imageRepository: imageRepository,
-                        userRepository: userRepository
-                    )
-                    let resultsViewModel = ScanResultsViewModel(
-                        cleanImagesUseCase: cleanImagesUseCase,
-                        imageRepository: imageRepository,
-                        scanResult: scanResult
-                    )
-                    return ScanResultsView(scanResult: .constant(scanResult))
-                }(),
-                isActive: $navigateToResults
-            ) {
-                EmptyView()
+            .navigationDestination(isPresented: $navigateToResults) {
+                ScanResultsView(scanResult: .constant(scanResult))
             }
-            .hidden()
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text(AppConstants.Strings.appName)
@@ -138,7 +109,7 @@ public struct HomeView: View {
         }
 
 
-        .onChange(of: navigateToResults) { shouldNavigate in
+        .onChange(of: navigateToResults) { _, shouldNavigate in
             if shouldNavigate, let result = scanResult {
                 scanViewModel.scanResult = result
                 navigateToResults = false

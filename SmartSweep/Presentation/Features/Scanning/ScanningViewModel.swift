@@ -75,6 +75,8 @@ public class ScanningViewModel: ObservableObject {
         progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
             guard let self = self, currentPhaseIndex < self.scanningPhases.count else {
                 timer.invalidate()
+                // Immediately complete when all phases are done
+                self?.completeScan()
                 return
             }
             
@@ -97,6 +99,12 @@ public class ScanningViewModel: ObservableObject {
             if phaseProgress >= 1.0 {
                 currentPhaseIndex += 1
                 phaseStartTime = Date()
+                
+                // If we've completed all phases, immediately trigger completion
+                if currentPhaseIndex >= self.scanningPhases.count {
+                    timer.invalidate()
+                    self.completeScan()
+                }
             }
         }
     }
@@ -108,10 +116,7 @@ public class ScanningViewModel: ObservableObject {
         isScanning = false
         isCompleted = true
         
-        // Small delay before showing results
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            // Navigation to results will be handled by the view
-        }
+        // Immediate navigation to results - no delay
     }
     
     private func handleScanError(_ error: Error) {

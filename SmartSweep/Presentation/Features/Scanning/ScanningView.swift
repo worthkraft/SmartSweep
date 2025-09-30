@@ -141,7 +141,7 @@ public struct ScanningView: View {
         .onAppear {
             viewModel.startScanning()
         }
-        .onChange(of: viewModel.isCompleted) { completed in
+        .onChange(of: viewModel.isCompleted, initial: false) { oldValue, completed in
             if completed, let result = viewModel.scanResult {
                 scanResult = result
                 navigateToResults = true
