@@ -39,12 +39,11 @@ public struct ScanningView: View {
             VStack(spacing: 24) {
                 Spacer()
 
-                // Phase Bubbles Animation
-                PhaseBubblesView(
+                // Floating Phase Bubbles Animation
+                FloatingPhaseBubblesView(
                     phases: viewModel.enabledPhases,
                     states: viewModel.phaseStates
                 )
-                .padding(.bottom, 16)
 
                 // Progress Ring
                 ScanningProgressRingView(
