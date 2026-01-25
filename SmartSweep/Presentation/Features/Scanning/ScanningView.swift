@@ -21,6 +21,8 @@ public struct ScanningView: View {
         self._scanResult = scanResult
     }
 
+    // MARK: - Body
+
     public var body: some View {
         ZStack {
             // Background gradient
@@ -148,10 +150,9 @@ public struct ScanningView: View {
         .onAppear {
             viewModel.startScanning()
         }
-        .onChange(of: viewModel.isCompleted, initial: false) { _, completed in
-            if completed, let result = viewModel.scanResult {
-                scanResult = result
-                navigateToResults = true
+        .onChange(of: viewModel.isCompleted) { _, completed in
+            if completed {
+                handleScanCompletion()
             }
         }
         .alert("Scan Error", isPresented: .constant(viewModel.errorMessage != nil)) {
@@ -161,6 +162,20 @@ public struct ScanningView: View {
             }
         } message: {
             Text(viewModel.errorMessage ?? "")
+        }
+    }
+
+    // MARK: - Private Methods
+
+    private func handleScanCompletion() {
+        guard let result = viewModel.scanResult else { return }
+        
+        scanResult = result
+        dismiss()
+        
+        // Navigate to results after dismiss
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            navigateToResults = true
         }
     }
 }

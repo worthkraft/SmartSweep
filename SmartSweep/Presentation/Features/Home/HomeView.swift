@@ -111,9 +111,8 @@ public struct HomeView: View {
 
         .onChange(of: navigateToResults) { _, shouldNavigate in
             if shouldNavigate, let result = scanResult {
+                // Pass scan result to results view model
                 scanViewModel.scanResult = result
-                navigateToResults = false
-                scanResult = nil
             }
         }
     }
