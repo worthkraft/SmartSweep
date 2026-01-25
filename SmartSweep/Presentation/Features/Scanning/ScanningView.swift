@@ -47,58 +47,10 @@ public struct ScanningView: View {
                 .padding(.bottom, 16)
 
                 // Progress Ring
-                ZStack {
-                    // Background circle
-                    Circle()
-                        .stroke(
-                            Color.white.opacity(0.1),
-                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                        )
-                        .frame(width: 200, height: 200)
-
-                    // Progress circle
-                    Circle()
-                        .trim(from: 0, to: viewModel.overallProgress)
-                        .stroke(
-                            LinearGradient(
-                                colors: [
-                                    AppConstants.Colors.accentPinkStart,
-                                    AppConstants.Colors.accentPinkEnd
-                                ],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            ),
-                            style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                        )
-                        .frame(width: 200, height: 200)
-                        .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut(duration: 0.3), value: viewModel.overallProgress)
-
-                    // Progress percentage
-                    VStack(spacing: 8) {
-                        Text("\(Int(viewModel.overallProgress * 100))%")
-                            .font(AppConstants.Typography.titleBold)
-                            .foregroundColor(AppConstants.Colors.textPrimaryDark)
-
-                        if viewModel.isScanning {
-                            // Scanning animation dots
-                            HStack(spacing: 4) {
-                                ForEach(0..<3, id: \.self) { index in
-                                    Circle()
-                                        .fill(AppConstants.Colors.accentPinkStart)
-                                        .frame(width: 6, height: 6)
-                                        .scaleEffect(viewModel.isScanning ? 1.0 : 0.5)
-                                        .animation(
-                                            Animation.easeInOut(duration: 0.6)
-                                                .repeatForever(autoreverses: true)
-                                                .delay(Double(index) * 0.2),
-                                            value: viewModel.isScanning
-                                        )
-                                }
-                            }
-                        }
-                    }
-                }
+                ScanningProgressRingView(
+                    progress: viewModel.overallProgress,
+                    isScanning: viewModel.isScanning
+                )
 
                 // Current task description
                 VStack(spacing: 16) {
