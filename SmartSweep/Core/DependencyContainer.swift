@@ -52,11 +52,34 @@ public class DependencyContainer: DependencyContainerProtocol {
             ImageAnalysisService()
         }
         
+        register(ScanPermissionValidator.self) {
+            let userRepository: UserRepositoryProtocol = self.resolve()
+            return ScanPermissionValidator(userRepository: userRepository)
+        }
+        
+        register(ImageLimitingService.self) {
+            ImageLimitingService()
+        }
+        
+        register(ScanExecutor.self) {
+            let imageRepository: ImageRepositoryProtocol = self.resolve()
+            return ScanExecutor(imageRepository: imageRepository)
+        }
+        
         // Register use cases
         register(CleanImagesUseCase.self) {
             let imageRepository: ImageRepositoryProtocol = self.resolve()
             let userRepository: UserRepositoryProtocol = self.resolve()
-            return CleanImagesUseCase(imageRepository: imageRepository, userRepository: userRepository)
+            let permissionValidator: ScanPermissionValidator = self.resolve()
+            let imageLimitingService: ImageLimitingService = self.resolve()
+            let scanExecutor: ScanExecutor = self.resolve()
+            return CleanImagesUseCase(
+                imageRepository: imageRepository,
+                userRepository: userRepository,
+                permissionValidator: permissionValidator,
+                imageLimitingService: imageLimitingService,
+                scanExecutor: scanExecutor
+            )
         }
     }
 }

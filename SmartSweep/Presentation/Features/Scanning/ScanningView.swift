@@ -161,9 +161,15 @@ public struct ScanningView: View {
 #Preview {
     let imageRepository = ImageRepository()
     let userRepository = UserRepository()
+    let permissionValidator = ScanPermissionValidator(userRepository: userRepository)
+    let imageLimitingService = ImageLimitingService()
+    let scanExecutor = ScanExecutor(imageRepository: imageRepository)
     let cleanImagesUseCase = CleanImagesUseCase(
         imageRepository: imageRepository,
-        userRepository: userRepository
+        userRepository: userRepository,
+        permissionValidator: permissionValidator,
+        imageLimitingService: imageLimitingService,
+        scanExecutor: scanExecutor
     )
     
     let viewModel = ScanningViewModel(

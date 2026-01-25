@@ -66,9 +66,15 @@ public struct HomeView: View {
                 case .scanning:
                     let imageRepository = ImageRepository()
                     let userRepository = UserRepository()
+                    let permissionValidator = ScanPermissionValidator(userRepository: userRepository)
+                    let imageLimitingService = ImageLimitingService()
+                    let scanExecutor = ScanExecutor(imageRepository: imageRepository)
                     let cleanImagesUseCase = CleanImagesUseCase(
                         imageRepository: imageRepository,
-                        userRepository: userRepository
+                        userRepository: userRepository,
+                        permissionValidator: permissionValidator,
+                        imageLimitingService: imageLimitingService,
+                        scanExecutor: scanExecutor
                     )
                     let scanningViewModel = ScanningViewModel(
                         cleanImagesUseCase: cleanImagesUseCase,
@@ -129,7 +135,16 @@ public struct HomeView: View {
     let userRepository = UserRepository()
     
     var cleanImagesUseCase: CleanImagesUseCase {
-        CleanImagesUseCase(imageRepository: imageRepository, userRepository: userRepository)
+        let permissionValidator = ScanPermissionValidator(userRepository: userRepository)
+        let imageLimitingService = ImageLimitingService()
+        let scanExecutor = ScanExecutor(imageRepository: imageRepository)
+        return CleanImagesUseCase(
+            imageRepository: imageRepository,
+            userRepository: userRepository,
+            permissionValidator: permissionValidator,
+            imageLimitingService: imageLimitingService,
+            scanExecutor: scanExecutor
+        )
     }
     
     var homeViewModel: HomeViewModel {
