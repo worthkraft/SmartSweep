@@ -48,11 +48,10 @@ public struct HomeView: View {
                         HomeSmartCleanButton(
                             canPerformDeepScan: homeViewModel.canPerformDeepScan,
                             userCanPerformDeepScan: homeViewModel.user.canPerformDeepScan,
-                            isAnimating: false,
-                            onUpgradeTapped: {
+                            isAnimating: false
+                        )                            {
                                 homeViewModel.upgradeToPremium()
                             }
-                        )
                     }
                     .padding(.horizontal, 40)
                     
@@ -66,19 +65,14 @@ public struct HomeView: View {
                 case .scanning:
                     let imageRepository = ImageRepository()
                     let userRepository = UserRepository()
-                    let permissionValidator = ScanPermissionValidator(userRepository: userRepository)
                     let imageLimitingService = ImageLimitingService()
-                    let scanExecutor = ScanExecutor(imageRepository: imageRepository)
-                    let cleanImagesUseCase = CleanImagesUseCase(
+                    let factory = ScanningHandlerFactory(
                         imageRepository: imageRepository,
                         userRepository: userRepository,
-                        permissionValidator: permissionValidator,
-                        imageLimitingService: imageLimitingService,
-                        scanExecutor: scanExecutor
+                        imageLimitingService: imageLimitingService
                     )
                     let scanningViewModel = ScanningViewModel(
-                        cleanImagesUseCase: cleanImagesUseCase,
-                        imageRepository: imageRepository
+                        scanningHandler: factory.createDefaultHandler()
                     )
                     ScanningView(
                         viewModel: scanningViewModel,

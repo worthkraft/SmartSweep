@@ -10,47 +10,55 @@ import Combine
 import SwiftUI
 
 public class ScanningViewModel: ObservableObject {
-    @Published var progress: Double = 0.0
+
+    // MARK: - Published Properties
+
+    @Published var overallProgress: Double = 0.0
     @Published var currentTask: String = "Initializing..."
     @Published var isScanning: Bool = false
     @Published var scanResult: ScanResult?
     @Published var errorMessage: String?
     @Published var isCompleted: Bool = false
-    
-    private let cleanImagesUseCase: CleanImagesUseCase
-    private let imageRepository: ImageRepositoryProtocol
+
+    /// State for each phase bubble
+    @Published var phaseStates: [ScanningPhaseType: PhaseState] = [:]
+
+    // MARK: - Dependencies
+
+    private let scanningHandler: ScanningHandler
     private var cancellables = Set<AnyCancellable>()
-    private var progressTimer: Timer?
-    
-    // Scanning phases with realistic timing
-    private let scanningPhases = [
-        (task: "Accessing photo library...", duration: 1.0, progressRange: 0.0...0.1),
-        (task: "Gathering images...", duration: 2.0, progressRange: 0.1...0.3),
-        (task: "Analyzing image properties...", duration: 3.0, progressRange: 0.3...0.5),
-        (task: "Detecting duplicates...", duration: 4.0, progressRange: 0.5...0.8),
-        (task: "Identifying temporary files...", duration: 2.0, progressRange: 0.8...0.9),
-        (task: "Finalizing results...", duration: 1.0, progressRange: 0.9...1.0)
-    ]
-    
-    public init(cleanImagesUseCase: CleanImagesUseCase, imageRepository: ImageRepositoryProtocol) {
-        self.cleanImagesUseCase = cleanImagesUseCase
-        self.imageRepository = imageRepository
+
+    // MARK: - Computed Properties
+
+    var enabledPhases: [ScanningPhaseType] {
+        scanningHandler.phases
     }
-    
+
+    var phaseInfoList: [PhaseInfo] {
+        scanningHandler.phaseInfoList
+    }
+
+    // MARK: - Initialization
+
+    public init(scanningHandler: ScanningHandler) {
+        self.scanningHandler = scanningHandler
+        setupStateSubscription()
+        initializePhaseStates()
+    }
+
+    // MARK: - Public Methods
+
     public func startScanning() {
         guard !isScanning else { return }
-        
+
         isScanning = true
-        progress = 0.0
+        overallProgress = 0.0
         isCompleted = false
         errorMessage = nil
         scanResult = nil
-        
-        // Start realistic progress animation
-        startProgressAnimation()
-        
-        // Perform actual scanning
-        cleanImagesUseCase.performSmartScan()
+        initializePhaseStates()
+
+        scanningHandler.startScan()
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
@@ -67,78 +75,95 @@ public class ScanningViewModel: ObservableObject {
             )
             .store(in: &cancellables)
     }
-    
-    private func startProgressAnimation() {
-        var currentPhaseIndex = 0
-        var phaseStartTime = Date()
-        
-        progressTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] timer in
-            guard let self = self, currentPhaseIndex < self.scanningPhases.count else {
-                timer.invalidate()
-                // Immediately complete when all phases are done
-                self?.completeScan()
-                return
-            }
-            
-            let currentPhase = self.scanningPhases[currentPhaseIndex]
-            let elapsedTime = Date().timeIntervalSince(phaseStartTime)
-            let phaseProgress = min(elapsedTime / currentPhase.duration, 1.0)
-            
-            // Update current task
-            if self.currentTask != currentPhase.task {
-                self.currentTask = currentPhase.task
-            }
-            
-            // Calculate progress within the phase range
-            let progressInRange = currentPhase.progressRange.lowerBound + 
-                (currentPhase.progressRange.upperBound - currentPhase.progressRange.lowerBound) * phaseProgress
-            
-            self.progress = progressInRange
-            
-            // Move to next phase if current one is complete
-            if phaseProgress >= 1.0 {
-                currentPhaseIndex += 1
-                phaseStartTime = Date()
-                
-                // If we've completed all phases, immediately trigger completion
-                if currentPhaseIndex >= self.scanningPhases.count {
-                    timer.invalidate()
-                    self.completeScan()
-                }
-            }
-        }
+
+    public func cancelScan() {
+        scanningHandler.cancelScan()
+        resetScan()
     }
-    
-    private func completeScan() {
-        progressTimer?.invalidate()
-        progress = 1.0
-        currentTask = "Scan completed!"
-        isScanning = false
-        isCompleted = true
-        
-        // Immediate navigation to results - no delay
-    }
-    
-    private func handleScanError(_ error: Error) {
-        progressTimer?.invalidate()
-        isScanning = false
-        errorMessage = error.localizedDescription
-        currentTask = "Scan failed"
-    }
-    
+
     public func resetScan() {
-        progressTimer?.invalidate()
-        progress = 0.0
+        overallProgress = 0.0
         currentTask = "Ready to scan"
         isScanning = false
         isCompleted = false
         errorMessage = nil
         scanResult = nil
+        initializePhaseStates()
     }
-    
-    deinit {
-        progressTimer?.invalidate()
-        cancellables.removeAll()
+
+    // MARK: - Private Methods
+
+    private func setupStateSubscription() {
+        scanningHandler.statePublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] update in
+                self?.handlePhaseStateUpdate(update)
+            }
+            .store(in: &cancellables)
+    }
+
+    private func initializePhaseStates() {
+        enabledPhases.forEach { phaseType in
+            phaseStates[phaseType] = .idle
+        }
+    }
+
+    private func handlePhaseStateUpdate(_ update: PhaseStateUpdate) {
+        // Update phase state
+        phaseStates[update.phaseType] = update.state
+
+        // Update current task text
+        if update.state.isActive {
+            currentTask = update.phaseType.displayName
+        } else if update.state == .finished {
+            // Find next phase for task text
+            if let nextPhase = enabledPhases.first(where: {
+                (phaseStates[$0] ?? .idle) == .idle
+            }) {
+                currentTask = "Preparing \(nextPhase.displayName)"
+            }
+        }
+
+        // Update overall progress
+        updateOverallProgress()
+    }
+
+    private func updateOverallProgress() {
+        let phaseInfos = phaseInfoList
+        var totalProgress: Double = 0.0
+
+        for phaseInfo in phaseInfos {
+            let phaseType = phaseInfo.phaseType
+            let state = phaseStates[phaseType] ?? .idle
+            let phaseRange = phaseInfo.progressRange
+            let rangeSize = phaseRange.upperBound - phaseRange.lowerBound
+
+            switch state {
+            case .finished:
+                totalProgress = phaseRange.upperBound
+            case .inProgress(let progress):
+                totalProgress = phaseRange.lowerBound + (rangeSize * progress)
+            case .started:
+                totalProgress = phaseRange.lowerBound
+            default:
+                break
+            }
+        }
+
+        overallProgress = min(totalProgress, 1.0)
+    }
+
+    private func completeScan() {
+        overallProgress = 1.0
+        currentTask = "Scan completed!"
+        isScanning = false
+        isCompleted = true
+    }
+
+    private func handleScanError(_ error: Error) {
+        isScanning = false
+        errorMessage = error.localizedDescription
+        currentTask = "Scan failed"
     }
 }
 

@@ -81,5 +81,29 @@ public class DependencyContainer: DependencyContainerProtocol {
                 scanExecutor: scanExecutor
             )
         }
+
+        // Register Scanning Handler Factory
+        register(ScanningHandlerFactory.self) {
+            let imageRepository: ImageRepositoryProtocol = self.resolve()
+            let userRepository: UserRepositoryProtocol = self.resolve()
+            let imageLimitingService: ImageLimitingService = self.resolve()
+            return ScanningHandlerFactory(
+                imageRepository: imageRepository,
+                userRepository: userRepository,
+                imageLimitingService: imageLimitingService
+            )
+        }
+
+        // Register Default Scanning Handler
+        register(ScanningHandler.self) {
+            let factory: ScanningHandlerFactory = self.resolve()
+            return factory.createDefaultHandler()
+        }
+
+        // Register ScanningViewModel
+        register(ScanningViewModel.self) {
+            let scanningHandler: ScanningHandler = self.resolve()
+            return ScanningViewModel(scanningHandler: scanningHandler)
+        }
     }
 }

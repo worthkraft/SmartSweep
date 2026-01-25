@@ -10,17 +10,17 @@ import SwiftUI
 public struct ScanningView: View {
     @StateObject private var viewModel: ScanningViewModel
     @Environment(\.dismiss) private var dismiss
-    
+
     // Navigation binding for results
     @Binding var navigateToResults: Bool
     @Binding var scanResult: ScanResult?
-    
+
     public init(viewModel: ScanningViewModel, navigateToResults: Binding<Bool>, scanResult: Binding<ScanResult?>) {
         self._viewModel = StateObject(wrappedValue: viewModel)
         self._navigateToResults = navigateToResults
         self._scanResult = scanResult
     }
-    
+
     public var body: some View {
         ZStack {
             // Background gradient
@@ -33,10 +33,17 @@ public struct ScanningView: View {
                 endPoint: .bottom
             )
             .ignoresSafeArea()
-            
-            VStack(spacing: 40) {
+
+            VStack(spacing: 24) {
                 Spacer()
-                
+
+                // Phase Bubbles Animation
+                PhaseBubblesView(
+                    phases: viewModel.enabledPhases,
+                    states: viewModel.phaseStates
+                )
+                .padding(.bottom, 16)
+
                 // Progress Ring
                 ZStack {
                     // Background circle
@@ -46,10 +53,10 @@ public struct ScanningView: View {
                             style: StrokeStyle(lineWidth: 8, lineCap: .round)
                         )
                         .frame(width: 200, height: 200)
-                    
+
                     // Progress circle
                     Circle()
-                        .trim(from: 0, to: viewModel.progress)
+                        .trim(from: 0, to: viewModel.overallProgress)
                         .stroke(
                             LinearGradient(
                                 colors: [
@@ -63,14 +70,14 @@ public struct ScanningView: View {
                         )
                         .frame(width: 200, height: 200)
                         .rotationEffect(.degrees(-90))
-                        .animation(.easeInOut(duration: 0.3), value: viewModel.progress)
-                    
+                        .animation(.easeInOut(duration: 0.3), value: viewModel.overallProgress)
+
                     // Progress percentage
                     VStack(spacing: 8) {
-                        Text("\(Int(viewModel.progress * 100))%")
+                        Text("\(Int(viewModel.overallProgress * 100))%")
                             .font(AppConstants.Typography.titleBold)
                             .foregroundColor(AppConstants.Colors.textPrimaryDark)
-                        
+
                         if viewModel.isScanning {
                             // Scanning animation dots
                             HStack(spacing: 4) {
@@ -90,26 +97,26 @@ public struct ScanningView: View {
                         }
                     }
                 }
-                
+
                 // Current task description
                 VStack(spacing: 16) {
                     Text("Scanning Your Photos")
                         .font(AppConstants.Typography.headlineBold)
                         .foregroundColor(AppConstants.Colors.textPrimaryDark)
-                    
+
                     Text(viewModel.currentTask)
                             .font(AppConstants.Typography.bodyMedium)
                             .foregroundColor(AppConstants.Colors.textSecondaryDark)
                         .multilineTextAlignment(.center)
                         .animation(.easeInOut(duration: 0.3), value: viewModel.currentTask)
                 }
-                
+
                 Spacer()
-                
+
                 // Cancel button (only show if scanning)
                 if viewModel.isScanning {
                     Button("Cancel") {
-                        viewModel.resetScan()
+                        viewModel.cancelScan()
                         dismiss()
                     }
                     .font(AppConstants.Typography.bodyMedium)
@@ -141,7 +148,7 @@ public struct ScanningView: View {
         .onAppear {
             viewModel.startScanning()
         }
-        .onChange(of: viewModel.isCompleted, initial: false) { oldValue, completed in
+        .onChange(of: viewModel.isCompleted, initial: false) { _, completed in
             if completed, let result = viewModel.scanResult {
                 scanResult = result
                 navigateToResults = true
@@ -161,22 +168,16 @@ public struct ScanningView: View {
 #Preview {
     let imageRepository = ImageRepository()
     let userRepository = UserRepository()
-    let permissionValidator = ScanPermissionValidator(userRepository: userRepository)
     let imageLimitingService = ImageLimitingService()
-    let scanExecutor = ScanExecutor(imageRepository: imageRepository)
-    let cleanImagesUseCase = CleanImagesUseCase(
+
+    let factory = ScanningHandlerFactory(
         imageRepository: imageRepository,
         userRepository: userRepository,
-        permissionValidator: permissionValidator,
-        imageLimitingService: imageLimitingService,
-        scanExecutor: scanExecutor
+        imageLimitingService: imageLimitingService
     )
-    
-    let viewModel = ScanningViewModel(
-        cleanImagesUseCase: cleanImagesUseCase,
-        imageRepository: imageRepository
-    )
-    
+
+    let viewModel = ScanningViewModel(scanningHandler: factory.createDefaultHandler())
+
     ScanningView(
         viewModel: viewModel,
         navigateToResults: .constant(false),
