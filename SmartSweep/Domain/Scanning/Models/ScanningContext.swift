@@ -5,19 +5,22 @@
 
 import Foundation
 
-/// Shared mutable context passed through all scanning phases
 public final class ScanningContext: @unchecked Sendable {
 
     // MARK: - Input
 
     public let user: User
 
-    // MARK: - Accumulated Results
+    // MARK: - Accumulated Results (Legacy)
 
     public var images: [SmartImage] = []
     public var duplicateGroups: [DuplicateGroup] = []
     public var temporaryImages: [SmartImage] = []
     public var storageInfo: StorageInfo?
+
+    // MARK: - Classification Results (New Unified Model)
+
+    public var classificationResult: ClassificationResult = .empty
 
     // MARK: - Extensible Metadata
 
@@ -49,7 +52,8 @@ public final class ScanningContext: @unchecked Sendable {
                 availableSpace: 0,
                 cleanableSpace: 0
             ),
-            isWatermarked: !user.isPremium
+            isWatermarked: !user.isPremium,
+            classificationResult: classificationResult
         )
     }
 }

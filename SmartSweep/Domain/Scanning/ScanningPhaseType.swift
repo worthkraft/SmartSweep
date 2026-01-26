@@ -5,7 +5,6 @@
 
 import Foundation
 
-/// Type-safe enum representing all available scanning phases
 public enum ScanningPhaseType: String, CaseIterable, Identifiable, Sendable {
     case libraryAccess = "library_access"
     case imageFetch = "image_fetch"
@@ -85,5 +84,21 @@ public enum ScanningPhaseType: String, CaseIterable, Identifiable, Sendable {
     /// Default phases for a full scan
     public static var defaultPhases: [ScanningPhaseType] {
         allCases.sorted { $0.defaultOrder < $1.defaultOrder }
+    }
+
+    // MARK: - Classification Integration
+
+    /// Maps to corresponding ImageClassificationType (if applicable)
+    public var classificationType: ImageClassificationType? {
+        switch self {
+        case .duplicateDetect: return .duplicate
+        case .temporaryDetect: return .temporary
+        default: return nil
+        }
+    }
+
+    /// Whether this phase produces classification results
+    public var isClassificationPhase: Bool {
+        classificationType != nil
     }
 }
