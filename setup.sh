@@ -85,3 +85,5 @@ fi
 
 printf "%b\n" "${GREEN}Project generated successfully!${NC}"
 printf "%b\n" "${BLUE}You can now open the project in Xcode.${NC}"
+
+open SmartSweep.xcworkspace

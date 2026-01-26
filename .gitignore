@@ -55,6 +55,10 @@ fastlane/test_output/
 .vscode/
 .idea/
 .trae/
+buildServer.json
+CLAUDE.md
+AGENTS.md
+.github/copilot-instructions.md
 
 # Crashlytics
 crashlytics-build.properties

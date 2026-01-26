@@ -15,7 +15,7 @@ public class UserRepository: UserRepositoryProtocol {
     private let userDefaults = UserDefaults.standard
     private let productID = "com.smartsweep.premium"
     
-    @Published private var currentUser: User = User()
+    @Published private var currentUser = User()
     
     public init() {
         loadUser()

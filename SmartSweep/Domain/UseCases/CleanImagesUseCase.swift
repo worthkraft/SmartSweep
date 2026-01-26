@@ -11,42 +11,33 @@ import Combine
 public class CleanImagesUseCase {
     private let imageRepository: ImageRepositoryProtocol
     private let userRepository: UserRepositoryProtocol
+    private let permissionValidator: ScanPermissionValidator
+    private let imageLimitingService: ImageLimitingService
+    private let scanExecutor: ScanExecutor
     
-    public init(imageRepository: ImageRepositoryProtocol, userRepository: UserRepositoryProtocol) {
+    public init(
+        imageRepository: ImageRepositoryProtocol,
+        userRepository: UserRepositoryProtocol,
+        permissionValidator: ScanPermissionValidator,
+        imageLimitingService: ImageLimitingService,
+        scanExecutor: ScanExecutor
+    ) {
         self.imageRepository = imageRepository
         self.userRepository = userRepository
+        self.permissionValidator = permissionValidator
+        self.imageLimitingService = imageLimitingService
+        self.scanExecutor = scanExecutor
     }
     
     public func performSmartScan() -> AnyPublisher<ScanResult, Error> {
-        return userRepository.getCurrentUser()
-            .tryMap { $0 }
+        return permissionValidator.validateScanPermission()
             .flatMap { user -> AnyPublisher<ScanResult, Error> in
-                guard user.canPerformDeepScan else {
-                    return Fail(error: CleanError.scanLimitReached)
-                        .eraseToAnyPublisher()
-                }
-                
                 return self.imageRepository.fetchAllImages()
                     .map { images in
-                        let limitedImages = user.isPremium ? images : Array(images.prefix(user.maxImagesPerScan))
-                        return limitedImages
+                        self.imageLimitingService.applyLimit(to: images, for: user)
                     }
-                    .tryMap { $0 }
-                    .flatMap { images -> AnyPublisher<ScanResult, Error> in
-                        let duplicatesPublisher = self.imageRepository.detectDuplicates(images: images)
-                        let temporaryPublisher = self.imageRepository.detectTemporaryImages(images: images)
-                        let storagePublisher = self.imageRepository.getStorageInfo()
-                        
-                        return Publishers.Zip3(duplicatesPublisher, temporaryPublisher, storagePublisher)
-                            .map { duplicates, temporary, storage in
-                                ScanResult(
-                                    duplicateGroups: duplicates,
-                                    temporaryImages: temporary,
-                                    storageInfo: storage,
-                                    isWatermarked: !user.isPremium
-                                )
-                            }
-                            .eraseToAnyPublisher()
+                    .flatMap { limitedImages -> AnyPublisher<ScanResult, Error> in
+                        self.scanExecutor.execute(on: limitedImages, for: user)
                     }
                     .eraseToAnyPublisher()
             }

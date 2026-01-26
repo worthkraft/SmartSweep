@@ -1,5 +1,5 @@
 //
-//  StorageHintCard.swift
+//  HomeStorageHintCard.swift
 //  SmartSweep
 //
 //  Created by Rizky Hasibuan on 7/9/25.
@@ -7,11 +7,8 @@
 
 import SwiftUI
 
-public struct StorageHintCard: View {
-    
-    public init() {}
-    
-    public var body: some View {
+struct HomeStorageHintCard: View {
+    var body: some View {
         VStack(spacing: 0) {
             Text(AppConstants.Strings.storageHint)
                 .font(AppConstants.Typography.headlineBold)

@@ -9,7 +9,7 @@ import Foundation
 import Photos
 import CoreLocation
 
-public struct SmartImage: Identifiable, Hashable {
+public struct SmartImage: Identifiable, Hashable, Sendable {
     public let id: String
     public let asset: PHAsset
     public let creationDate: Date

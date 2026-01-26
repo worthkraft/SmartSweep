@@ -12,19 +12,37 @@ struct ContentView: View {
     private let userRepository = UserRepository()
     
     private var cleanImagesUseCase: CleanImagesUseCase {
-        CleanImagesUseCase(imageRepository: imageRepository, userRepository: userRepository)
+        let permissionValidator = ScanPermissionValidator(userRepository: userRepository)
+        let imageLimitingService = ImageLimitingService()
+        let scanExecutor = ScanExecutor(imageRepository: imageRepository)
+        return CleanImagesUseCase(
+            imageRepository: imageRepository,
+            userRepository: userRepository,
+            permissionValidator: permissionValidator,
+            imageLimitingService: imageLimitingService,
+            scanExecutor: scanExecutor
+        )
     }
     
     private var homeViewModel: HomeViewModel {
         HomeViewModel(
-            cleanImagesUseCase: cleanImagesUseCase,
             userRepository: userRepository,
             imageRepository: imageRepository
         )
     }
     
+    private var scanViewModel: ScanResultsViewModel {
+        ScanResultsViewModel(
+            cleanImagesUseCase: cleanImagesUseCase,
+            imageRepository: imageRepository
+        )
+    }
+    
     var body: some View {
-        HomeView(viewModel: homeViewModel)
+        HomeView(
+            homeViewModel: homeViewModel,
+            scanViewModel: scanViewModel
+        )
     }
 }
 
