@@ -101,7 +101,7 @@ public class DependencyContainer: DependencyContainerProtocol {
         }
 
         // Register ScanningViewModel
-        register(ScanningViewModel.self) {
+        register(ScanningViewModel.self) { @MainActor in
             let scanningHandler: ScanningHandler = self.resolve()
             return ScanningViewModel(scanningHandler: scanningHandler)
         }

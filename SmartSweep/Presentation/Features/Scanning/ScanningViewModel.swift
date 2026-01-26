@@ -9,6 +9,7 @@ import Foundation
 import Combine
 import SwiftUI
 
+@MainActor
 public class ScanningViewModel: ObservableObject {
 
     // MARK: - Published Properties
@@ -62,15 +63,20 @@ public class ScanningViewModel: ObservableObject {
             .receive(on: DispatchQueue.main)
             .sink(
                 receiveCompletion: { [weak self] completion in
+                    guard let self = self else { return }
                     switch completion {
                     case .finished:
-                        self?.completeScan()
+                        self.completeScan()
                     case .failure(let error):
-                        self?.handleScanError(error)
+                        self.handleScanError(error)
                     }
                 },
                 receiveValue: { [weak self] result in
-                    self?.scanResult = result
+                    guard let self = self else { return }
+                    self.scanResult = result
+                    // Also trigger completion when we receive the result
+                    // This ensures navigation happens even if receiveCompletion has issues
+                    self.completeScan()
                 }
             )
             .store(in: &cancellables)
@@ -154,6 +160,9 @@ public class ScanningViewModel: ObservableObject {
     }
 
     private func completeScan() {
+        // Prevent double completion
+        guard !isCompleted else { return }
+
         overallProgress = 1.0
         currentTask = "Scan completed!"
         isScanning = false

@@ -16,10 +16,10 @@ public class ImageRepository: ImageRepositoryProtocol {
     private let photoLibrary = PHPhotoLibrary.shared()
     
     public func requestPhotoLibraryAccess() -> AnyPublisher<Bool, Never> {
-        return Future { promise in
+        return Future { receiveRequest in
             PHPhotoLibrary.requestAuthorization(for: .readWrite) { status in
                 DispatchQueue.main.async {
-                    promise(.success(status == .authorized))
+                    receiveRequest(.success(status == .authorized))
                 }
             }
         }
@@ -27,7 +27,7 @@ public class ImageRepository: ImageRepositoryProtocol {
     }
     
     public func fetchAllImages() -> AnyPublisher<[SmartImage], Error> {
-        return Future { promise in
+        return Future { receiveRequest in
             let fetchOptions = PHFetchOptions()
             fetchOptions.sortDescriptors = [NSSortDescriptor(key: "creationDate", ascending: false)]
             fetchOptions.predicate = NSPredicate(format: "mediaType == %d", PHAssetMediaType.image.rawValue)
@@ -40,7 +40,7 @@ public class ImageRepository: ImageRepositoryProtocol {
                 images.append(image)
             }
             
-            promise(.success(images))
+            receiveRequest(.success(images))
         }
         .eraseToAnyPublisher()
     }
@@ -51,25 +51,25 @@ public class ImageRepository: ImageRepositoryProtocol {
     }
     
     public func detectTemporaryImages(images: [SmartImage]) -> AnyPublisher<[SmartImage], Error> {
-        return Future { promise in
+        return Future { receiveRequest in
             let temporaryImages = images.filter { image in
                 self.isTemporaryImage(image)
             }
-            promise(.success(temporaryImages))
+            receiveRequest(.success(temporaryImages))
         }
         .eraseToAnyPublisher()
     }
     
     public func deleteImages(_ images: [SmartImage]) -> AnyPublisher<Void, Error> {
-        return Future { promise in
+        return Future { receiveRequest in
             PHPhotoLibrary.shared().performChanges({
                 let assets = images.map { $0.asset }
                 PHAssetChangeRequest.deleteAssets(assets as NSArray)
             }, completionHandler: { success, error in
                 if success {
-                    promise(.success(()))
+                    receiveRequest(.success(()))
                 } else {
-                    promise(.failure(error ?? ImageRepositoryError.deletionFailed))
+                    receiveRequest(.failure(error ?? ImageRepositoryError.deletionFailed))
                 }
             })
         }
@@ -77,7 +77,7 @@ public class ImageRepository: ImageRepositoryProtocol {
     }
     
     public func getStorageInfo() -> AnyPublisher<StorageInfo, Error> {
-        return Future { promise in
+        return Future { receiveRequest in
             do {
                 // Get device storage information using URLResourceKey
                 let fileURL = URL(fileURLWithPath: "/")
@@ -98,7 +98,7 @@ public class ImageRepository: ImageRepositoryProtocol {
                     cleanableSpace: cleanableSpace
                 )
                 
-                promise(.success(storageInfo))
+                receiveRequest(.success(storageInfo))
             } catch {
                 // Fallback to FileManager if URLResourceValues fails
                 do {
@@ -118,9 +118,9 @@ public class ImageRepository: ImageRepositoryProtocol {
                         cleanableSpace: cleanableSpace
                     )
                     
-                    promise(.success(storageInfo))
+                    receiveRequest(.success(storageInfo))
                 } catch {
-                    promise(.failure(error))
+                    receiveRequest(.failure(error))
                 }
             }
         }
